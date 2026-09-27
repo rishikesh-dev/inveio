@@ -1,0 +1,225 @@
+import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
+import 'package:inveio/auth/presentation/widgets/sign_up_footer.dart';
+import 'package:inveio/shared/constants/app_constants.dart';
+import 'package:inveio/shared/presentation/widgets/neon_button.dart';
+import 'package:inveio/shared/presentation/widgets/text_field_widget.dart';
+import 'package:inveio/shared/theme/app_colors.dart';
+import 'package:inveio/shared/utils/effects/animated_entrance.dart';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+/// The sign-up form body extracted from [SignUpScreen] to keep file size under
+/// the 300-line threshold.
+class SignUpFormBody extends StatelessWidget {
+  const SignUpFormBody({
+    super.key,
+    required this.formKey,
+    required this.fullNameController,
+    required this.emailController,
+    required this.passwordController,
+    required this.confirmPasswordController,
+    required this.obscurePassword,
+    required this.obscureConfirmPassword,
+    required this.state,
+    required this.onSignUp,
+    required this.onGoogleSignIn,
+  });
+
+  /// The form key for validation.
+  final GlobalKey<FormState> formKey;
+
+  /// Controller for the full name field.
+  final TextEditingController fullNameController;
+
+  /// Controller for the email field.
+  final TextEditingController emailController;
+
+  /// Controller for the password field.
+  final TextEditingController passwordController;
+
+  /// Controller for the confirm password field.
+  final TextEditingController confirmPasswordController;
+
+  /// Notifier for password visibility toggle.
+  final ValueNotifier<bool> obscurePassword;
+
+  /// Notifier for confirm password visibility toggle.
+  final ValueNotifier<bool> obscureConfirmPassword;
+
+  /// Current auth state for error display and loading indicator.
+  final dynamic state;
+
+  /// Callback when the user taps "Create Account".
+  final VoidCallback onSignUp;
+
+  /// Callback when the user taps "Continue with Google".
+  final VoidCallback onGoogleSignIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        spacing: 10,
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Create account',
+            style: TextStyle(
+              height: 0.8,
+              color: AppColors.darkTextPrimary,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+            ),
+          ).toAnimatedEntrance(delay: const Duration(milliseconds: 60)),
+          const Text(
+            'Join ${AppConstants.appName} to start managing your expenses.',
+            style: TextStyle(
+              color: AppColors.darkTextSecondary,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ).toAnimatedEntrance(delay: const Duration(milliseconds: 110)),
+          const SizedBox(height: 20),
+          TextFieldWidget(
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your full name';
+              }
+              if (value.trim().length < 2) {
+                return 'Name looks too short';
+              }
+              return null;
+            },
+            verticalMargin: 2,
+            contentPaddingVertical: 17,
+            hintText: 'Full Name',
+            prefix: const Icon(LucideIcons.user, size: 20),
+            controller: fullNameController,
+          ).toAnimatedEntrance(delay: const Duration(milliseconds: 150)),
+          TextFieldWidget(
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your email address';
+              }
+              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
+                return 'Please enter a valid email address';
+              }
+              return null;
+            },
+            errorText:
+                state is AuthErrorState && state.message.contains('email')
+                ? state.message
+                : null,
+            verticalMargin: 2,
+            contentPaddingVertical: 17,
+            hintText: 'Email',
+            prefix: const Icon(LucideIcons.mail, size: 20),
+            controller: emailController,
+          ).toAnimatedEntrance(delay: const Duration(milliseconds: 150)),
+          ListenableBuilder(
+            listenable: Listenable.merge([obscurePassword, passwordController]),
+            builder: (context, _) => TextFieldWidget(
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters long';
+                }
+                return null;
+              },
+              errorText:
+                  state is AuthErrorState && state.message.contains('password')
+                  ? state.message
+                  : null,
+              verticalMargin: 2,
+              contentPaddingVertical: 17,
+              hintText: 'Password',
+              prefix: Icon(
+                obscurePassword.value
+                    ? LucideIcons.lockKeyhole
+                    : LucideIcons.lockKeyholeOpen,
+                size: 20,
+              ),
+              controller: passwordController,
+              obscureText: obscurePassword.value,
+              suffix: GestureDetector(
+                onTap: () => obscurePassword.value = !obscurePassword.value,
+                child: passwordController.text.isNotEmpty
+                    ? Icon(
+                        obscurePassword.value
+                            ? LucideIcons.eye
+                            : LucideIcons.eyeOff,
+                        color: AppColors.darkTextSecondary,
+                        size: 20,
+                      )
+                    : const SizedBox(),
+              ),
+            ),
+          ),
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              obscureConfirmPassword,
+              confirmPasswordController,
+            ]),
+            builder: (context, _) => TextFieldWidget(
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters long';
+                }
+                if (value != passwordController.text) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+              errorText:
+                  state is AuthErrorState && state.message.contains('password')
+                  ? state.message
+                  : null,
+              verticalMargin: 2,
+              contentPaddingVertical: 17,
+              hintText: 'Confirm Password',
+              prefix: Icon(
+                obscureConfirmPassword.value
+                    ? LucideIcons.lockKeyhole
+                    : LucideIcons.lockKeyholeOpen,
+                size: 20,
+              ),
+              controller: confirmPasswordController,
+              obscureText: obscureConfirmPassword.value,
+              suffix: GestureDetector(
+                onTap: () => obscureConfirmPassword.value =
+                    !obscureConfirmPassword.value,
+                child: confirmPasswordController.text.isNotEmpty
+                    ? Icon(
+                        obscureConfirmPassword.value
+                            ? LucideIcons.eye
+                            : LucideIcons.eyeOff,
+                        color: AppColors.darkTextSecondary,
+                        size: 20,
+                      )
+                    : const SizedBox(),
+              ),
+            ),
+          ),
+          const SizedBox(),
+          NeonButton(
+            label: state is AuthLoading
+                ? 'Creating account...'
+                : 'Create Account',
+            onPressed: state is AuthLoading ? null : onSignUp,
+          ).toAnimatedEntrance(delay: const Duration(milliseconds: 240)),
+          SignUpFooter(
+            onGoogleSignIn: onGoogleSignIn,
+            isAuthLoading: state is AuthLoading,
+          ),
+        ],
+      ),
+    );
+  }
+}
