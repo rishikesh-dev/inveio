@@ -31,6 +31,8 @@ import 'package:inveio/transaction/data/datasources/local/isar_transaction_data_
 import 'package:inveio/transaction/data/repositories/transaction_repository_impl.dart';
 import 'package:inveio/transaction/domain/repositories/transaction_repository.dart';
 import 'package:inveio/transaction/presentation/bloc/transaction_bloc.dart';
+import 'package:inveio/expenses/presentation/cubit/expense_form_cubit.dart';
+import 'package:inveio/invoice/presentation/cubit/invoice_form_cubit.dart';
 import 'package:inveio/profile/data/models/user_model.dart';
 import 'package:inveio/shared/secrets/app_secrets.dart';
 import 'package:inveio/firebase_options.dart';
@@ -158,6 +160,24 @@ class AppDependencies {
           onboardingLocalDatasource: sl(),
           uid: FirebaseAuth.instance.currentUser?.uid ?? '',
           type: type,
+        ),
+      );
+    }
+    if (!sl.isRegistered<ExpenseFormCubit>()) {
+      sl.registerFactory<ExpenseFormCubit>(
+        () => ExpenseFormCubit(
+          transactionRepository: sl(),
+          onboardingLocalDataSource: sl(),
+          uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+        ),
+      );
+    }
+    if (!sl.isRegistered<InvoiceFormCubit>()) {
+      sl.registerFactory<InvoiceFormCubit>(
+        () => InvoiceFormCubit(
+          transactionRepository: sl(),
+          onboardingLocalDataSource: sl(),
+          uid: FirebaseAuth.instance.currentUser?.uid ?? '',
         ),
       );
     }
