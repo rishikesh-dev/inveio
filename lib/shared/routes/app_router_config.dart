@@ -13,8 +13,10 @@ import 'package:inveio/shared/routes/route_data/delete_account_route_data.dart';
 import 'package:inveio/shared/routes/route_data/edit_profile_route_data.dart';
 import 'package:inveio/shared/routes/route_data/scan_result_route_data.dart';
 import 'package:inveio/shared/routes/router_constants.dart';
+import 'package:inveio/expenses/presentation/cubit/expense_form_cubit.dart';
 import 'package:inveio/expenses/presentation/screens/add_expense_screen.dart';
 import 'package:inveio/expenses/presentation/screens/transaction_details_screen.dart';
+import 'package:inveio/invoice/presentation/cubit/invoice_form_cubit.dart';
 import 'package:inveio/invoice/presentation/screens/add_invoice_screen.dart';
 import 'package:inveio/home/presentation/screens/home_screen.dart';
 import 'package:inveio/invoice/presentation/screens/invoice_screen.dart';
@@ -30,6 +32,7 @@ import 'package:inveio/reports/presentation/screens/reports_screen.dart';
 import 'package:inveio/scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:inveio/splash/presentation/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -224,13 +227,15 @@ class AppRouterConfig {
         name: RouterConstants.addExpense,
         builder: (context, state) {
           final extra = state.extra;
-          if (extra is ScanResultRouteData) {
-            return AddExpenseScreen(
-              scannedData: extra.data,
-              scannedImagePath: extra.imagePath,
-            );
-          }
-          return const AddExpenseScreen();
+          return BlocProvider<ExpenseFormCubit>(
+            create: (_) => AppDependencies.sl<ExpenseFormCubit>(),
+            child: extra is ScanResultRouteData
+                ? AddExpenseScreen(
+                    scannedData: extra.data,
+                    scannedImagePath: extra.imagePath,
+                  )
+                : const AddExpenseScreen(),
+          );
         },
       ),
 
@@ -239,10 +244,12 @@ class AppRouterConfig {
         name: RouterConstants.addInvoice,
         builder: (context, state) {
           final extra = state.extra;
-          if (extra is ScanResultRouteData) {
-            return AddInvoiceScreen(scannedData: extra.data);
-          }
-          return const AddInvoiceScreen();
+          return BlocProvider<InvoiceFormCubit>(
+            create: (_) => AppDependencies.sl<InvoiceFormCubit>(),
+            child: extra is ScanResultRouteData
+                ? AddInvoiceScreen(scannedData: extra.data)
+                : const AddInvoiceScreen(),
+          );
         },
       ),
       GoRoute(
@@ -250,7 +257,10 @@ class AppRouterConfig {
         name: RouterConstants.editInvoice,
         builder: (context, state) {
           final entity = state.extra as TransactionEntity?;
-          return AddInvoiceScreen(initialTransaction: entity);
+          return BlocProvider<InvoiceFormCubit>(
+            create: (_) => AppDependencies.sl<InvoiceFormCubit>(),
+            child: AddInvoiceScreen(initialTransaction: entity),
+          );
         },
       ),
       GoRoute(
