@@ -279,7 +279,6 @@ class _InvoiceCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       child: GestureDetector(
         onTap: () {
-          context.read<TransactionBloc>().add(PopulateInvoiceForm(invoice));
           context.pushNamed(RouterConstants.editInvoice, extra: invoice);
         },
         child: Container(

@@ -24,7 +24,6 @@ import 'package:inveio/auth/data/repositories/auth_repository_impl.dart';
 import 'package:inveio/auth/domain/repositories/auth_repository.dart';
 import 'package:inveio/auth/domain/usecases/sign_up_with_email_use_case.dart';
 import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
-import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
 import 'package:inveio/transaction/data/models/transaction_model.dart';
 import 'package:inveio/transaction/data/datasources/local/transaction_data_source.dart';
 import 'package:inveio/transaction/data/datasources/local/isar_transaction_data_source_impl.dart';
@@ -154,12 +153,10 @@ class AppDependencies {
       );
     }
     if (!sl.isRegistered<TransactionBloc>()) {
-      sl.registerFactoryParam<TransactionBloc, TransactionType, void>(
-        (type, _) => TransactionBloc(
+      sl.registerFactory<TransactionBloc>(
+        () => TransactionBloc(
           transactionRepository: sl(),
-          onboardingLocalDatasource: sl(),
           uid: FirebaseAuth.instance.currentUser?.uid ?? '',
-          type: type,
         ),
       );
     }

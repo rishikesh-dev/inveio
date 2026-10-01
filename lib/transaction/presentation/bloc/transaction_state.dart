@@ -2,217 +2,59 @@ part of 'transaction_bloc.dart';
 
 const _sentinel = Object();
 
+/// State for [TransactionBloc]: the latest/all transaction list status and the
+/// transaction currently selected for the details screen.
 @immutable
 sealed class TransactionState with Equatable {
-  TransactionFormData get form;
-  GstBreakdown get gst;
-  SaveStatus get save;
+  /// The latest/all transactions list status.
   LatestTransactionsStatus get latest;
+
+  /// The transaction selected for the details screen, if any.
   TransactionEntity? get selectedTransaction;
-  bool get showCashWarning;
 
   const TransactionState();
 
+  /// The initial, empty state.
   factory TransactionState.initial() => _TransactionState(
-    form: TransactionFormData.initial(),
-    gst: const GstBreakdown(
-      isInterState: false,
-      cgst: 0.0,
-      sgst: 0.0,
-      igst: 0.0,
-      taxableAmount: 0.0,
-    ),
-    save: SaveStatus.initial(),
     latest: LatestTransactionsStatus.initial(),
     selectedTransaction: null,
-    showCashWarning: false,
   );
 
-
   TransactionState copyWith({
-    TransactionFormData? form,
-    GstBreakdown? gst,
-    SaveStatus? save,
     LatestTransactionsStatus? latest,
     Object? selectedTransaction = _sentinel,
-    bool? showCashWarning,
   }) => _TransactionState(
-    form: form ?? this.form,
-    gst: gst ?? this.gst,
-    save: save ?? this.save,
     latest: latest ?? this.latest,
     selectedTransaction: identical(selectedTransaction, _sentinel)
         ? this.selectedTransaction
         : selectedTransaction as TransactionEntity?,
-    showCashWarning: showCashWarning ?? this.showCashWarning,
   );
 
   @override
-  List<Object?> get props => [
-    form,
-    gst,
-    save,
-    latest,
-    selectedTransaction,
-    showCashWarning,
-  ];
+  List<Object?> get props => [latest, selectedTransaction];
 }
 
 final class _TransactionState extends TransactionState {
   @override
-  final TransactionFormData form;
-  @override
-  final GstBreakdown gst;
-  @override
-  final SaveStatus save;
-  @override
   final LatestTransactionsStatus latest;
   @override
   final TransactionEntity? selectedTransaction;
-  @override
-  final bool showCashWarning;
 
   const _TransactionState({
-    required this.form,
-    required this.gst,
-    required this.save,
     required this.latest,
     required this.selectedTransaction,
-    required this.showCashWarning,
   });
 }
 
-final class TransactionFormData extends Equatable {
-  final double amount;
-  final String counterpartyGstin;
-  final String description;
-  final DateTime date;
-  final TimeOfDay? time;
-  final String? category;
-  final String? vendorName;
-  final PaymentMode? paymentMode;
-  final bool? itcEligible;
-  final String? receiptPath;
-  final String? clientName;
-  final String? invoiceNumber;
-  final DateTime? dueDate;
-
-  const TransactionFormData({
-    this.amount = 0.0,
-    this.counterpartyGstin = '',
-    this.description = '',
-    required this.date,
-    this.time,
-    this.category,
-    this.vendorName,
-    this.paymentMode = PaymentMode.cash,
-    this.itcEligible = true,
-    this.receiptPath,
-    this.clientName,
-    this.invoiceNumber,
-    this.dueDate,
-  });
-
-  factory TransactionFormData.initial() {
-    return TransactionFormData(date: DateTime.now());
-  }
-
-  TransactionFormData copyWith({
-    double? amount,
-    String? counterpartyGstin,
-    String? description,
-    DateTime? date,
-    Object? time = _sentinel,
-    Object? category = _sentinel,
-    Object? vendorName = _sentinel,
-    PaymentMode? paymentMode,
-    bool? itcEligible,
-    Object? receiptPath = _sentinel,
-    Object? clientName = _sentinel,
-    Object? invoiceNumber = _sentinel,
-    Object? dueDate = _sentinel,
-  }) {
-    return TransactionFormData(
-      amount: amount ?? this.amount,
-      counterpartyGstin: counterpartyGstin ?? this.counterpartyGstin,
-      description: description ?? this.description,
-      date: date ?? this.date,
-      time: identical(time, _sentinel) ? this.time : time as TimeOfDay?,
-      category: identical(category, _sentinel)
-          ? this.category
-          : category as String?,
-      vendorName: identical(vendorName, _sentinel)
-          ? this.vendorName
-          : vendorName as String?,
-      paymentMode: paymentMode ?? this.paymentMode,
-      itcEligible: itcEligible ?? this.itcEligible,
-      receiptPath: identical(receiptPath, _sentinel)
-          ? this.receiptPath
-          : receiptPath as String?,
-      clientName: identical(clientName, _sentinel)
-          ? this.clientName
-          : clientName as String?,
-      invoiceNumber: identical(invoiceNumber, _sentinel)
-          ? this.invoiceNumber
-          : invoiceNumber as String?,
-      dueDate: identical(dueDate, _sentinel)
-          ? this.dueDate
-          : dueDate as DateTime?,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-    amount,
-    counterpartyGstin,
-    description,
-    date,
-    time,
-    category,
-    vendorName,
-    paymentMode,
-    itcEligible,
-    receiptPath,
-    clientName,
-    invoiceNumber,
-    dueDate,
-  ];
-}
-
-final class SaveStatus extends Equatable {
-  final bool isSaving;
-  final String? saveError;
-  final bool saveSuccess;
-
-  const SaveStatus({
-    this.isSaving = false,
-    this.saveError,
-    this.saveSuccess = false,
-  });
-
-  factory SaveStatus.initial() => const SaveStatus();
-
-  SaveStatus copyWith({
-    bool? isSaving,
-    Object? saveError = _sentinel,
-    bool? saveSuccess,
-  }) {
-    return SaveStatus(
-      isSaving: isSaving ?? this.isSaving,
-      saveError: identical(saveError, _sentinel)
-          ? this.saveError
-          : saveError as String?,
-      saveSuccess: saveSuccess ?? this.saveSuccess,
-    );
-  }
-
-  @override
-  List<Object?> get props => [isSaving, saveError, saveSuccess];
-}
-
+/// Loading/error/data status for the latest transactions list.
 final class LatestTransactionsStatus extends Equatable {
+  /// Whether the list is currently loading.
   final bool isLoadingLatest;
+
+  /// The loaded transactions.
   final List<TransactionEntity> latestExpenses;
+
+  /// Human-readable error message, if the last load failed.
   final String? latestError;
 
   const LatestTransactionsStatus({

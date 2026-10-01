@@ -1,6 +1,5 @@
 import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
 import 'package:inveio/scan/presentation/cubit/receipt_scanner_cubit.dart';
-import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
 import 'package:inveio/shared/constants/app_constants.dart';
 import 'package:inveio/shared/dependencies/app_dependencies.dart';
 import 'package:inveio/shared/routes/app_router_config.dart';
@@ -30,14 +29,7 @@ void main() async {
         BlocProvider(create: (context) => AppDependencies.sl<AuthBloc>()),
         BlocProvider(create: (context) => AppDependencies.sl<OnboardingBloc>()),
         BlocProvider(
-          create: (context) => AppDependencies.sl<TransactionBloc>(
-            param1: TransactionType.expense,
-          ),
-        ),
-        BlocProvider(
-          create: (context) => AppDependencies.sl<TransactionBloc>(
-            param1: TransactionType.invoice,
-          ),
+          create: (context) => AppDependencies.sl<TransactionBloc>(),
         ),
         BlocProvider(create: (context) => AppDependencies.sl<UserBloc>()),
         BlocProvider(

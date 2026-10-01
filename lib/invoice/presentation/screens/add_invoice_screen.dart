@@ -8,6 +8,7 @@ import 'package:inveio/invoice/presentation/widgets/add_invoice_form_fields.dart
 import 'package:inveio/invoice/presentation/widgets/invoice_gst_display.dart';
 import 'package:inveio/invoice/presentation/widgets/invoice_save_button.dart';
 import 'package:inveio/scan/domain/entities/scan_receipt_entity.dart';
+import 'package:inveio/invoice/presentation/cubit/invoice_form_cubit.dart';
 import 'package:inveio/transaction/presentation/bloc/transaction_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,34 +39,24 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   @override
   void initState() {
     super.initState();
-    _amountController = TextEditingController(
-      text: widget.scannedData?.amount?.toString() ?? '',
-    );
-    _descriptionController = TextEditingController(
-      text: widget.scannedData?.vendorName != null
-          ? 'Purchase from ${widget.scannedData!.vendorName}'
-          : '',
-    );
-    _gstinController = TextEditingController(text: widget.scannedData?.gstin);
-    _clientNameController = TextEditingController(
-      text: widget.scannedData?.vendorName,
-    );
+    _amountController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _gstinController = TextEditingController();
+    _clientNameController = TextEditingController();
     _invoiceNumberController = TextEditingController();
 
-    if (widget.initialTransaction != null) {
+    final initialTransaction = widget.initialTransaction;
+    final scannedData = widget.scannedData;
+    if (initialTransaction != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<TransactionBloc>().add(
-          PopulateInvoiceForm(widget.initialTransaction!),
-        );
+        if (!mounted) return;
+        context.read<InvoiceFormCubit>().populateFromEntity(initialTransaction);
       });
-    } else if (widget.scannedData != null) {
+    } else if (scannedData != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<TransactionBloc>().add(
-          PopulateFromScan(widget.scannedData!),
-        );
+        if (!mounted) return;
+        context.read<InvoiceFormCubit>().populateFromScan(scannedData);
       });
-    } else {
-      context.read<TransactionBloc>().add(const ResetForm());
     }
   }
 
@@ -79,188 +70,231 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     super.dispose();
   }
 
+  /// Syncs the text controllers from cubit state (used for prefill).
+  ///
+  /// Only writes when the value differs so the user's cursor/typing is kept.
+  void _syncFromState(InvoiceFormState state) {
+    final amountText = _amountController.text;
+    if ((double.tryParse(amountText) ?? 0.0) != state.amount) {
+      _setControllerText(
+        _amountController,
+        state.amount == 0.0 ? '' : state.amount.toString(),
+      );
+    }
+    _setControllerText(_descriptionController, state.description);
+    _setControllerText(_gstinController, state.clientGstin);
+    _setControllerText(_clientNameController, state.clientName ?? '');
+    _setControllerText(_invoiceNumberController, state.invoiceNumber ?? '');
+  }
+
+  void _setControllerText(TextEditingController controller, String value) {
+    if (controller.text == value) return;
+    controller.value = controller.value.copyWith(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+      composing: TextRange.empty,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialTransaction != null;
-    return BlocConsumer<TransactionBloc, TransactionState>(
+    return BlocListener<InvoiceFormCubit, InvoiceFormState>(
+      listenWhen: (previous, current) =>
+          previous.saveSuccess != current.saveSuccess ||
+          previous.saveError != current.saveError,
       listener: (context, state) {
-        if (state.save.saveSuccess) {
+        if (state.saveSuccess) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Invoice saved')));
+          context.read<TransactionBloc>().add(
+            const LatestTransactionsRequested(),
+          );
           if (context.mounted) context.pop();
-        } else if (state.save.saveError != null) {
+        } else if (state.saveError != null) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(state.save.saveError!)));
+          ).showSnackBar(SnackBar(content: Text(state.saveError!)));
         }
       },
-      builder: (context, state) {
-        return Scaffold(
-          appBar: const AppBarWidget(sliver: false),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    isEditing ? 'Edit Invoice' : 'New Invoice',
-                    style: const TextStyle(
-                      color: AppColors.darkTextPrimary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    textAlign: TextAlign.center,
+      child: BlocListener<InvoiceFormCubit, InvoiceFormState>(
+        listenWhen: (previous, current) =>
+            previous.amount != current.amount ||
+            previous.description != current.description ||
+            previous.clientGstin != current.clientGstin ||
+            previous.clientName != current.clientName ||
+            previous.invoiceNumber != current.invoiceNumber,
+        listener: (context, state) => _syncFromState(state),
+        child: BlocBuilder<InvoiceFormCubit, InvoiceFormState>(
+          builder: (context, state) {
+            return Scaffold(
+              appBar: const AppBarWidget(sliver: false),
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
                   ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: IntrinsicWidth(
-                      child: TextFieldWidget(
-                        controller: _amountController,
-                        keyboardType: TextInputType.number,
-                        hintText: '0',
-                        textStyle: AppTextStyles.monoLarge.copyWith(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w900,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      Text(
+                        isEditing ? 'Edit Invoice' : 'New Invoice',
+                        style: const TextStyle(
+                          color: AppColors.darkTextPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: IntrinsicWidth(
+                          child: TextFieldWidget(
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            hintText: '0',
+                            textStyle: AppTextStyles.monoLarge.copyWith(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.darkTextPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                              filled: false,
+                              hintText: '0',
+                              hintStyle: AppTextStyles.monoLarge.copyWith(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.darkTextMuted,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.currency_rupee,
+                                size: 36,
+                                color: AppColors.primary.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            onChanged: (value) => context
+                                .read<InvoiceFormCubit>()
+                                .amountChanged(value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const InvoiceFieldLabel('Date'),
+                      const SizedBox(height: 8),
+                      InvoiceDateField(date: state.date, onTap: _pickDate),
+                      const SizedBox(height: 16),
+                      const InvoiceFieldLabel('Description'),
+                      const SizedBox(height: 8),
+                      TextFieldWidget(
+                        controller: _descriptionController,
+                        hintText: 'What is this invoice for?',
+                        textStyle: const TextStyle(
                           color: AppColors.darkTextPrimary,
                         ),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          filled: false,
-                          hintText: '0',
-                          hintStyle: AppTextStyles.monoLarge.copyWith(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.darkTextMuted,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.currency_rupee,
-                            size: 36,
-                            color: AppColors.primary.withValues(alpha: 0.7),
-                          ),
+                        cursorColor: AppColors.primary,
+                        decoration: expenseInputDecoration(
+                          hint: 'What is this invoice for?',
                         ),
                         onChanged: (value) => context
-                            .read<TransactionBloc>()
-                            .add(AmountChanged(value)),
+                            .read<InvoiceFormCubit>()
+                            .descriptionChanged(value),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      const InvoiceFieldLabel('Client Name'),
+                      const SizedBox(height: 8),
+                      TextFieldWidget(
+                        controller: _clientNameController,
+                        hintText: 'Client name',
+                        textStyle: const TextStyle(
+                          color: AppColors.darkTextPrimary,
+                        ),
+                        cursorColor: AppColors.primary,
+                        decoration: expenseInputDecoration(hint: 'Client name'),
+                        onChanged: (value) => context
+                            .read<InvoiceFormCubit>()
+                            .clientNameChanged(value),
+                      ),
+                      const SizedBox(height: 16),
+                      const InvoiceFieldLabel('Invoice Number'),
+                      const SizedBox(height: 8),
+                      TextFieldWidget(
+                        hintText: 'INV-001',
+                        controller: _invoiceNumberController,
+                        textStyle: const TextStyle(
+                          color: AppColors.darkTextPrimary,
+                        ),
+                        cursorColor: AppColors.primary,
+                        decoration: expenseInputDecoration(hint: 'INV-001'),
+                        onChanged: (value) => context
+                            .read<InvoiceFormCubit>()
+                            .invoiceNumberChanged(value),
+                      ),
+                      const SizedBox(height: 16),
+                      const InvoiceFieldLabel('Due Date'),
+                      const SizedBox(height: 8),
+                      InvoiceDueDateField(
+                        dueDate: state.dueDate,
+                        onTap: _pickDueDate,
+                      ),
+                      const SizedBox(height: 16),
+                      const InvoiceFieldLabel('Client GSTIN'),
+                      const SizedBox(height: 8),
+                      TextFieldWidget(
+                        controller: _gstinController,
+                        hintText: 'GSTIN (optional)',
+                        maxLength: 15,
+                        textCapitalization: TextCapitalization.characters,
+                        textStyle: const TextStyle(
+                          color: AppColors.darkTextPrimary,
+                        ),
+                        cursorColor: AppColors.primary,
+                        decoration: expenseInputDecoration(
+                          hint: 'GSTIN (optional)',
+                        ),
+                        onChanged: (value) => context
+                            .read<InvoiceFormCubit>()
+                            .clientGstinChanged(value),
+                      ),
+                      const SizedBox(height: 8),
+                      InvoiceGstDisplay(
+                        cgst: state.gst.cgst,
+                        sgst: state.gst.sgst,
+                        igst: state.gst.igst,
+                        taxableAmount: state.gst.taxableAmount,
+                        isInterState: state.gst.isInterState,
+                      ),
+                      const SizedBox(height: 32),
+                      InvoiceSaveButton(
+                        isSaving: state.isSaving,
+                        onPressed: () =>
+                            context.read<InvoiceFormCubit>().save(),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  const InvoiceFieldLabel('Date'),
-                  const SizedBox(height: 8),
-                  InvoiceDateField(date: state.form.date, onTap: _pickDate),
-                  const SizedBox(height: 16),
-                  const InvoiceFieldLabel('Description'),
-                  const SizedBox(height: 8),
-                  TextFieldWidget(
-                    controller: _descriptionController,
-                    hintText: 'What is this invoice for?',
-                    textStyle: const TextStyle(
-                      color: AppColors.darkTextPrimary,
-                    ),
-                    cursorColor: AppColors.primary,
-                    decoration: expenseInputDecoration(
-                      hint: 'What is this invoice for?',
-                    ),
-                    onChanged: (value) => context.read<TransactionBloc>().add(
-                      DescriptionChanged(value),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const InvoiceFieldLabel('Client Name'),
-                  const SizedBox(height: 8),
-                  TextFieldWidget(
-                    controller: _clientNameController,
-                    hintText: 'Client name',
-                    textStyle: const TextStyle(
-                      color: AppColors.darkTextPrimary,
-                    ),
-                    cursorColor: AppColors.primary,
-                    decoration: expenseInputDecoration(hint: 'Client name'),
-                    onChanged: (value) => context.read<TransactionBloc>().add(
-                      ClientNameChanged(value),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const InvoiceFieldLabel('Invoice Number'),
-                  const SizedBox(height: 8),
-                  TextFieldWidget(
-                    hintText: 'INV-001',
-                    controller: _invoiceNumberController,
-                    textStyle: const TextStyle(
-                      color: AppColors.darkTextPrimary,
-                    ),
-                    cursorColor: AppColors.primary,
-                    decoration: expenseInputDecoration(hint: 'INV-001'),
-                    onChanged: (value) => context.read<TransactionBloc>().add(
-                      InvoiceNumberChanged(value),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const InvoiceFieldLabel('Due Date'),
-                  const SizedBox(height: 8),
-                  InvoiceDueDateField(
-                    dueDate: state.form.dueDate,
-                    onTap: _pickDueDate,
-                  ),
-                  const SizedBox(height: 16),
-                  const InvoiceFieldLabel('Client GSTIN'),
-                  const SizedBox(height: 8),
-                  TextFieldWidget(
-                    controller: _gstinController,
-                    hintText: 'GSTIN (optional)',
-                    maxLength: 15,
-                    textCapitalization: TextCapitalization.characters,
-                    textStyle: const TextStyle(
-                      color: AppColors.darkTextPrimary,
-                    ),
-                    cursorColor: AppColors.primary,
-                    decoration: expenseInputDecoration(
-                      hint: 'GSTIN (optional)',
-                    ),
-                    onChanged: (value) => context.read<TransactionBloc>().add(
-                      GstinChanged(value),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  InvoiceGstDisplay(
-                    cgst: state.gst.cgst,
-                    sgst: state.gst.sgst,
-                    igst: state.gst.igst,
-                    taxableAmount: state.gst.taxableAmount,
-                    isInterState: state.gst.isInterState,
-                  ),
-                  const SizedBox(height: 32),
-                  InvoiceSaveButton(
-                    isSaving: state.save.isSaving,
-                    onPressed: () {
-                      context.read<TransactionBloc>().add(
-                        const UpsertTransaction(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 
   Future<void> _pickDate() async {
-    final current = context.read<TransactionBloc>().state;
+    final current = context.read<InvoiceFormCubit>().state;
     final picked = await showDatePicker(
       context: context,
-      initialDate: current.form.date,
+      initialDate: current.date,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (context, child) => Theme(
@@ -271,17 +305,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       ),
     );
     if (picked != null && mounted) {
-      context.read<TransactionBloc>().add(DateChanged(date: picked));
+      context.read<InvoiceFormCubit>().dateChanged(picked);
     }
   }
 
   Future<void> _pickDueDate() async {
-    final current = context.read<TransactionBloc>().state;
+    final current = context.read<InvoiceFormCubit>().state;
     final picked = await showDatePicker(
       context: context,
       initialDate:
-          current.form.dueDate ??
-          current.form.date.add(const Duration(days: 30)),
+          current.dueDate ?? current.date.add(const Duration(days: 30)),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (context, child) => Theme(
@@ -292,7 +325,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       ),
     );
     if (picked != null && mounted) {
-      context.read<TransactionBloc>().add(DueDateChanged(picked));
+      context.read<InvoiceFormCubit>().dueDateChanged(picked);
     }
   }
 }
