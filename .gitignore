@@ -72,6 +72,20 @@ android/**/build/
 *.apk
 *.aab
 
+# Signing — never commit
+android/key.properties
+key.properties
+*.jks
+*.keystore
+
+# Firebase / environment secrets
+GoogleService-Info.plist
+.env
+.env.*
+
+# Local audit output
+AUDIT.md
+
 # IDE
 .idea/
 .vscode/
@@ -80,3 +94,6 @@ android/**/build/
 # OS
 .DS_Store
 Thumbs.db
+
+.kilo/
+AUDIT.md
