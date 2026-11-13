@@ -27,9 +27,11 @@ class DetailActions extends StatelessWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: () {
+                final localId = transaction?.localId;
+                if (localId == null) return;
                 context.pushNamed(
-                  RouterConstants.addExpense,
-                  extra: transaction,
+                  RouterConstants.editExpense,
+                  pathParameters: {'id': localId.toString()},
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -76,9 +78,9 @@ class DetailActions extends StatelessWidget {
                   ),
                 );
                 if (confirmed == true && context.mounted) {
-                  context
-                      .read<TransactionBloc>()
-                      .add(DeleteTransaction(transaction!.localId!));
+                  context.read<TransactionBloc>().add(
+                    DeleteTransaction(transaction!.localId!),
+                  );
                   Navigator.of(context).maybePop();
                 }
               },

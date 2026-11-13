@@ -46,10 +46,7 @@ class FloatingCoins extends StatelessWidget {
         Positioned(
           bottom: 260 + floatOffset * 0.5,
           left: 36,
-          child: _dashedCoin(
-            symbol: '₹',
-            size: 32,
-          ),
+          child: _dashedCoin(symbol: '₹', size: 32),
         ),
       ],
     );
@@ -60,21 +57,20 @@ class FloatingCoins extends StatelessWidget {
     required Color bg,
     required Color fg,
     required double size,
-  }) =>
-      Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-        alignment: Alignment.center,
-        child: Text(
-          symbol,
-          style: TextStyle(
-            fontSize: size * 0.42,
-            fontWeight: FontWeight.w900,
-            color: fg,
-          ),
-        ),
-      );
+  }) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+    alignment: Alignment.center,
+    child: Text(
+      symbol,
+      style: TextStyle(
+        fontSize: size * 0.42,
+        fontWeight: FontWeight.w900,
+        color: fg,
+      ),
+    ),
+  );
 
   Widget _dashedCoin({required String symbol, required double size}) =>
       Container(

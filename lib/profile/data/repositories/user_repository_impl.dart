@@ -17,6 +17,7 @@ class UserRepositoryImpl extends UserRepository {
     required UserLocalDataSource userLocalDataSource,
   }) : _userRemoteDataSource = userRemoteDataSource,
        _userLocalDataSource = userLocalDataSource;
+
   /// Fetches the user profile from the remote source and caches it locally.
   @override
   Future<Either<Failure, UserEntity>> fetchProfile() async {

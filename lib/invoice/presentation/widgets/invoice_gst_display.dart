@@ -15,12 +15,16 @@ class InvoiceGstDisplay extends StatelessWidget {
 
   /// The computed CGST amount.
   final double cgst;
+
   /// The computed SGST amount.
   final double sgst;
+
   /// The computed IGST amount.
   final double igst;
+
   /// The taxable amount before GST.
   final double taxableAmount;
+
   /// Whether the transaction is inter-state.
   final bool isInterState;
 

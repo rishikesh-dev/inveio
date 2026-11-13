@@ -25,14 +25,11 @@ class InvoiceFieldLabel extends StatelessWidget {
 
 /// Displays the invoice date and opens a date picker on tap.
 class InvoiceDateField extends StatelessWidget {
-  const InvoiceDateField({
-    super.key,
-    required this.date,
-    required this.onTap,
-  });
+  const InvoiceDateField({super.key, required this.date, required this.onTap});
 
   /// The currently selected date.
-  final DateTime date;
+  final DateTime? date;
+
   /// Callback when the date field is tapped.
   final VoidCallback onTap;
 
@@ -49,11 +46,22 @@ class InvoiceDateField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(LucideIcons.calendar, color: AppColors.primary, size: 18),
+            const Icon(
+              LucideIcons.calendar,
+              color: AppColors.primary,
+              size: 18,
+            ),
             const SizedBox(width: 12),
             Text(
-              DateFormat('MMM dd, yyyy').format(date),
-              style: const TextStyle(color: AppColors.darkTextPrimary, fontSize: 15),
+              date != null
+                  ? DateFormat('MMM dd, yyyy').format(date!)
+                  : 'Select date',
+              style: TextStyle(
+                color: date != null
+                    ? AppColors.darkTextPrimary
+                    : AppColors.darkTextMuted,
+                fontSize: 15,
+              ),
             ),
           ],
         ),
@@ -72,6 +80,7 @@ class InvoiceDueDateField extends StatelessWidget {
 
   /// The currently selected due date, or null.
   final DateTime? dueDate;
+
   /// Callback when the due date field is tapped.
   final VoidCallback onTap;
 
@@ -88,14 +97,20 @@ class InvoiceDueDateField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(LucideIcons.calendar, color: AppColors.primary, size: 18),
+            const Icon(
+              LucideIcons.calendar,
+              color: AppColors.primary,
+              size: 18,
+            ),
             const SizedBox(width: 12),
             Text(
               dueDate != null
                   ? DateFormat('MMM dd, yyyy').format(dueDate!)
                   : 'Select due date',
               style: TextStyle(
-                color: dueDate != null ? AppColors.darkTextPrimary : AppColors.darkTextMuted,
+                color: dueDate != null
+                    ? AppColors.darkTextPrimary
+                    : AppColors.darkTextMuted,
                 fontSize: 15,
               ),
             ),
@@ -105,5 +120,3 @@ class InvoiceDueDateField extends StatelessWidget {
     );
   }
 }
-
-

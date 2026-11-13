@@ -1,22 +1,45 @@
+import 'dart:math' as math;
+
 import 'package:inveio/shared/presentation/widgets/app_card.dart';
 import 'package:inveio/shared/theme/app_colors.dart';
+import 'package:inveio/shared/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 
 class MonthlySpendCard extends StatelessWidget {
-  const MonthlySpendCard({super.key});
+  const MonthlySpendCard({
+    super.key,
+    required this.totalThisYear,
+    required this.monthLabels,
+    required this.monthValues,
+    required this.highlightedIndex,
+  });
+
+  final double totalThisYear;
+  final List<String> monthLabels;
+  final List<double> monthValues;
+  final int highlightedIndex;
 
   @override
   Widget build(BuildContext context) {
-    return const AppCard(
-      padding: EdgeInsets.fromLTRB(18, 18, 18, 16),
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Title('Monthly Spend'),
-          SizedBox(height: 8),
-          _Subtitle('₹145,200 total this year'),
-          SizedBox(height: 22),
-          SizedBox(height: 160, child: _LineChart()),
+          const _Title('Monthly Spend'),
+          const SizedBox(height: 8),
+          _Subtitle(
+            '${CurrencyFormatter.compact(totalThisYear)} total this year',
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            height: 160,
+            child: _LineChart(
+              labels: monthLabels,
+              values: monthValues,
+              highlightedIndex: highlightedIndex,
+            ),
+          ),
         ],
       ),
     );
@@ -58,19 +81,39 @@ class _Subtitle extends StatelessWidget {
 }
 
 class _LineChart extends StatelessWidget {
-  const _LineChart();
+  const _LineChart({
+    required this.labels,
+    required this.values,
+    required this.highlightedIndex,
+  });
+
+  final List<String> labels;
+  final List<double> values;
+  final int highlightedIndex;
 
   @override
   Widget build(BuildContext context) {
-    return const CustomPaint(
-      painter: _LineChartPainter(),
-      child: SizedBox.expand(),
+    return CustomPaint(
+      painter: _LineChartPainter(
+        labels: labels,
+        values: values,
+        highlightedIndex: highlightedIndex,
+      ),
+      child: const SizedBox.expand(),
     );
   }
 }
 
 class _LineChartPainter extends CustomPainter {
-  const _LineChartPainter();
+  const _LineChartPainter({
+    required this.labels,
+    required this.values,
+    required this.highlightedIndex,
+  });
+
+  final List<String> labels;
+  final List<double> values;
+  final int highlightedIndex;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -78,40 +121,59 @@ class _LineChartPainter extends CustomPainter {
       ..color = AppColors.darkBorder
       ..strokeWidth = 1;
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
     for (var i = 0; i < 5; i++) {
-      canvas.drawLine(Offset(0, size.height * (0.12 + i * 0.18)), Offset(size.width, size.height * (0.12 + i * 0.18)), gridPaint);
+      canvas.drawLine(
+        Offset(0, size.height * (0.12 + i * 0.18)),
+        Offset(size.width, size.height * (0.12 + i * 0.18)),
+        gridPaint,
+      );
     }
 
-    for (var i = 0; i < months.length; i++) {
+    for (var i = 0; i < labels.length; i++) {
       textPainter.text = TextSpan(
-        text: months[i],
+        text: labels[i],
         style: TextStyle(
-          color: i == 3 ? AppColors.primary : AppColors.darkTextSecondary,
+          color: i == highlightedIndex
+              ? AppColors.primary
+              : AppColors.darkTextSecondary,
           fontSize: 11,
-          fontWeight: i == 3 ? FontWeight.w900 : FontWeight.w500,
+          fontWeight: i == highlightedIndex
+              ? FontWeight.w900
+              : FontWeight.w500,
         ),
       );
       textPainter.layout();
-      final x = (size.width / (months.length - 1)) * i - textPainter.width / 2;
-      textPainter.paint(canvas, Offset(x.clamp(0, size.width), size.height - 22));
+      final x = labels.length == 1
+          ? size.width / 2 - textPainter.width / 2
+          : (size.width / (labels.length - 1)) * i - textPainter.width / 2;
+      textPainter.paint(
+        canvas,
+        Offset(x.clamp(0, size.width), size.height - 22),
+      );
     }
 
+    if (values.isEmpty) return;
+
+    final maxValue = values.reduce(math.max);
     final points = <Offset>[
-      Offset(0, size.height * 0.62),
-      Offset(size.width * 0.2, size.height * 0.46),
-      Offset(size.width * 0.4, size.height * 0.52),
-      Offset(size.width * 0.6, size.height * 0.28),
-      Offset(size.width * 0.8, size.height * 0.36),
-      Offset(size.width, size.height * 0.18),
+      for (var i = 0; i < values.length; i++)
+        Offset(
+          values.length == 1
+              ? size.width / 2
+              : (size.width / (values.length - 1)) * i,
+          size.height *
+              (0.62 - (maxValue == 0 ? 0 : values[i] / maxValue) * 0.44),
+        ),
     ];
 
     final fillPath = Path()..moveTo(points.first.dx, size.height - 26);
     for (final point in points) {
       fillPath.lineTo(point.dx, point.dy);
     }
-    fillPath..lineTo(points.last.dx, size.height - 26)..close();
+    fillPath
+      ..lineTo(points.last.dx, size.height - 26)
+      ..close();
 
     canvas.drawPath(
       fillPath,
@@ -119,7 +181,10 @@ class _LineChartPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.primary.withValues(alpha: 0.26), AppColors.primary.withValues(alpha: 0.02)],
+          colors: [
+            AppColors.primary.withValues(alpha: 0.26),
+            AppColors.primary.withValues(alpha: 0.02),
+          ],
         ).createShader(Offset.zero & size),
     );
 
@@ -142,10 +207,15 @@ class _LineChartPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     for (final point in points) {
-      canvas..drawCircle(point, 4, dotPaint)..drawCircle(point, 4, dotBorderPaint);
+      canvas
+        ..drawCircle(point, 4, dotPaint)
+        ..drawCircle(point, 4, dotBorderPaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LineChartPainter oldDelegate) =>
+      oldDelegate.labels != labels ||
+      oldDelegate.values != values ||
+      oldDelegate.highlightedIndex != highlightedIndex;
 }

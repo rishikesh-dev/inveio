@@ -12,7 +12,19 @@ abstract class TransactionRepository {
     int limit = 10,
   });
 
-  Future<Either<Failure, List<TransactionEntity>>> getAllTransactions();
+  Future<Either<Failure, List<TransactionEntity>>> getAllTransactions({
+    TransactionType? type,
+  });
+
+  /// Looks up a single transaction by its local Isar ID.
+  ///
+  /// Returns `right(null)` when no transaction exists for [localId].
+  Future<Either<Failure, TransactionEntity?>> getTransactionByLocalId(
+    int localId,
+  );
 
   Future<Either<Failure, void>> deleteTransaction(int localId);
+
+  /// Deletes every expense and invoice record. Other app data is untouched.
+  Future<Either<Failure, void>> clearHistory();
 }

@@ -14,10 +14,13 @@ class GstSplitBar extends StatelessWidget {
 
   /// Whether the transaction is inter-state.
   final bool isInterState;
+
   /// The computed CGST amount.
   final double cgst;
+
   /// The computed SGST amount.
   final double sgst;
+
   /// The computed IGST amount.
   final double igst;
 

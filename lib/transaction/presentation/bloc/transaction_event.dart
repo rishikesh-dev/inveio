@@ -1,6 +1,7 @@
 part of 'transaction_bloc.dart';
 
-@immutable
+/// Base class for events handled by [TransactionBloc].
+
 sealed class TransactionEvent extends Equatable {
   const TransactionEvent();
 
@@ -8,128 +9,9 @@ sealed class TransactionEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-final class AmountChanged extends TransactionEvent {
-  final String raw;
-
-  const AmountChanged(this.raw);
-
-  @override
-  List<Object?> get props => [raw];
-}
-
-final class GstinChanged extends TransactionEvent {
-  final String value;
-
-  const GstinChanged(this.value);
-
-  @override
-  List<Object?> get props => [value];
-}
-
-final class DescriptionChanged extends TransactionEvent {
-  final String value;
-
-  const DescriptionChanged(this.value);
-
-  @override
-  List<Object?> get props => [value];
-}
-
-final class VendorNameChanged extends TransactionEvent {
-  final String value;
-
-  const VendorNameChanged(this.value);
-
-  @override
-  List<Object?> get props => [value];
-}
-
-final class ClientNameChanged extends TransactionEvent {
-  final String value;
-
-  const ClientNameChanged(this.value);
-
-  @override
-  List<Object?> get props => [value];
-}
-
-final class InvoiceNumberChanged extends TransactionEvent {
-  final String value;
-
-  const InvoiceNumberChanged(this.value);
-
-  @override
-  List<Object?> get props => [value];
-}
-
-final class DateChanged extends TransactionEvent {
-  final DateTime? date;
-  final TimeOfDay? time;
-
-  const DateChanged({this.date, this.time});
-
-  @override
-  List<Object?> get props => [date, time];
-}
-
-final class DueDateChanged extends TransactionEvent {
-  final DateTime date;
-
-  const DueDateChanged(this.date);
-
-  @override
-  List<Object?> get props => [date];
-}
-
-final class CategorySelected extends TransactionEvent {
-  final String category;
-
-  const CategorySelected(this.category);
-
-  @override
-  List<Object?> get props => [category];
-}
-
-final class PaymentModeSelected extends TransactionEvent {
-  final PaymentMode mode;
-
-  const PaymentModeSelected(this.mode);
-
-  @override
-  List<Object?> get props => [mode];
-}
-
-final class ItcEligibleToggled extends TransactionEvent {
-  final bool value;
-
-  const ItcEligibleToggled(this.value);
-
-  @override
-  List<Object?> get props => [value];
-}
-
-final class ReceiptAttached extends TransactionEvent {
-  final String path;
-
-  const ReceiptAttached(this.path);
-
-  @override
-  List<Object?> get props => [path];
-}
-
-final class ReceiptRemoved extends TransactionEvent {
-  const ReceiptRemoved();
-}
-
-final class UpsertTransaction extends TransactionEvent {
-  const UpsertTransaction();
-}
-
-final class ResetForm extends TransactionEvent {
-  const ResetForm();
-}
-
+/// Requests the latest transactions (used to refresh list screens).
 final class LatestTransactionsRequested extends TransactionEvent {
+  /// Maximum number of transactions to fetch.
   final int limit;
 
   const LatestTransactionsRequested({this.limit = 10});
@@ -138,20 +20,30 @@ final class LatestTransactionsRequested extends TransactionEvent {
   List<Object?> get props => [limit];
 }
 
+/// Requests every transaction.
 final class AllTransactionsRequested extends TransactionEvent {
   const AllTransactionsRequested();
 }
 
-final class PopulateInvoiceForm extends TransactionEvent {
-  final TransactionEntity entity;
-
-  const PopulateInvoiceForm(this.entity);
-
-  @override
-  List<Object?> get props => [entity];
+/// Requests every invoice.
+final class AllInvoicesRequested extends TransactionEvent {
+  const AllInvoicesRequested();
 }
 
+/// Requests details for a single transaction by its local Isar id.
+final class TransactionDetailsRequested extends TransactionEvent {
+  /// The local Isar id of the transaction.
+  final int localId;
+
+  const TransactionDetailsRequested(this.localId);
+
+  @override
+  List<Object?> get props => [localId];
+}
+
+/// Deletes a transaction by its local Isar id.
 final class DeleteTransaction extends TransactionEvent {
+  /// The local Isar id of the transaction to delete.
   final int localId;
 
   const DeleteTransaction(this.localId);
@@ -160,20 +52,13 @@ final class DeleteTransaction extends TransactionEvent {
   List<Object?> get props => [localId];
 }
 
-final class TransactionDetailsRequested extends TransactionEvent {
-  final String expenseId;
+/// Clears all expense and invoice history.
+final class ClearHistory extends TransactionEvent {
+  /// Text the user typed to confirm the destructive action.
+  final String confirmation;
 
-  const TransactionDetailsRequested(this.expenseId);
-
-  @override
-  List<Object?> get props => [expenseId];
-}
-
-final class PopulateFromScan extends TransactionEvent {
-  final ScannedReceiptEntity data;
-
-  const PopulateFromScan(this.data);
+  const ClearHistory({this.confirmation = ''});
 
   @override
-  List<Object?> get props => [data];
+  List<Object?> get props => [confirmation];
 }

@@ -18,11 +18,7 @@ class TransactionHero extends StatelessWidget {
         const CircleAvatar(
           radius: 30,
           backgroundColor: AppColors.darkCardAlt,
-          child: Icon(
-            LucideIcons.coffee,
-            color: AppColors.primary,
-            size: 26,
-          ),
+          child: Icon(LucideIcons.coffee, color: AppColors.primary, size: 26),
         ),
         const SizedBox(height: 18),
         Text(
@@ -49,9 +45,7 @@ class TransactionHero extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            t != null
-                ? CurrencyFormatter.compact(t.totalAmount)
-                : '₹850.00',
+            t != null ? CurrencyFormatter.compact(t.totalAmount) : '₹850.00',
             style: const TextStyle(
               color: AppColors.darkTextPrimary,
               fontSize: 34,

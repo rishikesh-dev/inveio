@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// A reusable sliver app bar with an optional title, subtitle, and actions.
+/// A reusable sliver app bar with an optional title, subtitle, leading widget, and actions.
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   /// The primary title text.
   final String? title;
@@ -14,6 +14,9 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   /// Style override for the subtitle text.
   final TextStyle? subTitleStyle;
 
+  /// Optional leading widget displayed before the title.
+  final Widget? leading;
+
   /// Optional action widgets displayed in the app bar.
   final List<Widget>? actions;
 
@@ -23,11 +26,12 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final bool sliver;
   final bool centerTitle;
 
-  /// Creates an [AppBarWidget] with optional title, subtitle, actions, and expanded height.
+  /// Creates an [AppBarWidget] with optional title, subtitle, leading, actions, and expanded height.
   const AppBarWidget({
     super.key,
     this.title,
     this.subTitle,
+    this.leading,
     this.actions,
     this.titleStyle,
     this.subTitleStyle,
@@ -72,12 +76,14 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         expandedHeight: expandedHeight,
         centerTitle: centerTitle,
         title: titleColumn,
+        leading: leading,
         actions: [...?actions, const SizedBox(width: 16)],
       );
     }
 
     return AppBar(
       title: titleColumn,
+      leading: leading,
       actions: [...?actions, const SizedBox(width: 16)],
     );
   }

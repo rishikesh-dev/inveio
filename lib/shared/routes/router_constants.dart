@@ -24,9 +24,6 @@ class RouterConstants {
   /// Onboarding – success screen route.
   static const String onBoardingSuccess = '/onboarding/success';
 
-  /// Scan receipt screen route.
-  static const String scanReceipt = '/scan-receipt';
-
   /// Sign-in screen route.
   static const String signIn = '/sign-in';
 
@@ -38,6 +35,9 @@ class RouterConstants {
 
   /// Edit profile screen route.
   static const String editProfile = '/edit-profile';
+
+  /// Business details screen route.
+  static const String businessDetails = '/business-details';
 
   /// Delete account confirmation screen route.
   static const String deleteAccountConfirmation =
@@ -55,42 +55,20 @@ class RouterConstants {
   /// Profile screen route.
   static const String profile = '/profile';
 
-  /// About screen route.
-  static const String about = '/about';
-
-  /// Help screen route.
-  static const String help = '/help';
-
-  /// Terms of service screen route.
-  static const String terms = '/terms';
-
-  /// Privacy policy screen route.
-  static const String privacy = '/privacy';
-
-  /// FAQ screen route.
-  static const String faq = '/faq';
-
-  /// Contact screen route.
-  static const String contact = '/contact';
-
   /// Add invoice screen route.
   static const String addInvoice = '/add-invoice';
 
-  /// Edit invoice screen route.
-  static const String editInvoice = '/edit-invoice';
-
-  /// View invoice screen route.
-  static const String viewInvoice = '/view-invoice';
-
-  /// Add client screen route.
-  static const String addClient = '/add-client';
+  /// Edit invoice screen route. `:id` is the transaction's local ID.
+  static const String editInvoice = '/edit-invoice/:id';
 
   /// Add expense screen route.
   static const String addExpense = '/add-expense';
+
+  /// Edit expense screen route. `:id` is the transaction's local ID.
+  static const String editExpense = '/expense/:id/edit';
 
   /// Transaction details screen route.
   static const String transactionDetails = '/transaction-details';
   static const String securityScreen = '/security-screen';
   static const String changePasswordScreen = '/change-password-screen';
-    
 }

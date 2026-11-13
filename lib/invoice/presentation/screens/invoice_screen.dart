@@ -1,17 +1,26 @@
+import 'package:inveio/invoice/domain/services/invoice_pdf_generator.dart';
+import 'package:inveio/invoice/presentation/cubit/invoice_pdf_cubit.dart';
+import 'package:inveio/onboarding/domain/repositories/onboarding_repository.dart';
+import 'package:inveio/settings/presentation/cubit/export_data_cubit.dart';
 import 'package:inveio/shared/constants/app_constants.dart';
-import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
+import 'package:inveio/shared/dependencies/app_dependencies.dart';
 import 'package:inveio/shared/presentation/widgets/accent_chip.dart';
 import 'package:inveio/shared/presentation/widgets/app_bar_widget.dart';
 import 'package:inveio/shared/presentation/widgets/neon_button.dart';
+import 'package:inveio/shared/presentation/widgets/transaction_card_widget.dart';
 import 'package:inveio/shared/routes/router_constants.dart';
 import 'package:inveio/shared/theme/app_colors.dart';
 import 'package:inveio/shared/utils/extensions/extensions.dart';
+import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
 import 'package:inveio/transaction/presentation/bloc/transaction_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 class InvoiceScreen extends StatefulWidget {
   const InvoiceScreen({super.key});
@@ -20,14 +29,109 @@ class InvoiceScreen extends StatefulWidget {
   State<InvoiceScreen> createState() => _InvoiceScreenState();
 }
 
-class _InvoiceScreenState extends State<InvoiceScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController tabController;
+class _InvoiceScreenState extends State<InvoiceScreen> {
+  late final ExportDataCubit _exportCubit;
+  late final InvoicePdfCubit _pdfCubit;
+
   @override
   void initState() {
     super.initState();
-    context.read<TransactionBloc>().add(const AllTransactionsRequested());
-    tabController = TabController(length: 4, vsync: this);
+    context.read<TransactionBloc>().add(const AllInvoicesRequested());
+    _exportCubit = AppDependencies.sl<ExportDataCubit>();
+    _pdfCubit = InvoicePdfCubit(
+      onboardingRepository: AppDependencies.sl<OnboardingRepository>(),
+      generator: AppDependencies.sl<InvoicePdfGenerator>(),
+      uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _exportCubit.close();
+    _pdfCubit.close();
+    super.dispose();
+  }
+
+  /// Exports invoice data and opens the share sheet with the CSV file.
+  Future<void> _downloadInvoices() async {
+    await _exportCubit.exportInvoices();
+    if (!mounted) return;
+
+    final state = _exportCubit.state;
+    if (state is ExportDataSuccess) {
+      await _shareExportedFile(state.filePath);
+    } else if (state is ExportDataFailure) {
+      _showSnack(state.message);
+    }
+  }
+
+  Future<void> _shareExportedFile(String path) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path, mimeType: 'text/csv')],
+        subject: 'Invoices',
+      ),
+    );
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// Builds the PDF via [InvoicePdfCubit] and shares it.
+  Future<void> _shareInvoicePdf(TransactionEntity invoice) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    final bytes = await _pdfCubit.build(invoice);
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (bytes == null) {
+      _showSnack(_pdfCubit.state.error ?? 'Failed to generate PDF.');
+      return;
+    }
+    final filename = _pdfCubit.state.filename ?? 'invoice.pdf';
+    await Printing.sharePdf(bytes: bytes, filename: filename);
+  }
+
+  /// Builds the PDF via [InvoicePdfCubit] and opens the print dialog.
+  Future<void> _printInvoicePdf(TransactionEntity invoice) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    final bytes = await _pdfCubit.build(invoice);
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (bytes == null) {
+      _showSnack(_pdfCubit.state.error ?? 'Failed to generate PDF.');
+      return;
+    }
+    await Printing.layoutPdf(
+      name: _pdfCubit.state.filename ?? 'invoice.pdf',
+      onLayout: (_) async => bytes,
+    );
+  }
+
+  void _handleMenuAction(TransactionMenuAction action, TransactionEntity invoice) {
+    switch (action) {
+      case TransactionMenuAction.sharePdf:
+        _shareInvoicePdf(invoice);
+      case TransactionMenuAction.print:
+        _printInvoicePdf(invoice);
+      case TransactionMenuAction.edit:
+      case TransactionMenuAction.details:
+      case TransactionMenuAction.duplicate:
+      case TransactionMenuAction.share:
+      case TransactionMenuAction.delete:
+        break;
+    }
   }
 
   @override
@@ -49,71 +153,48 @@ class _InvoiceScreenState extends State<InvoiceScreen>
               fontWeight: FontWeight.w800,
             ),
             actions: [
-              IconButton.filled(
-                onPressed: () {},
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).cardColor,
+              PopupMenuButton<String>(
+                color: AppColors.darkCard,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                icon: const Icon(LucideIcons.search, size: 18),
-              ),
-              IconButton.filled(
-                onPressed: () {},
+                tooltip: 'Invoice options',
                 style: IconButton.styleFrom(
                   backgroundColor: Theme.of(context).cardColor,
                 ),
                 icon: const Icon(LucideIcons.moreVertical, size: 18),
+                itemBuilder: (context) => [
+                  const PopupMenuItem<String>(
+                    value: 'download',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.download, size: 18),
+                        SizedBox(width: 12),
+                        Text('Download'),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'download') _downloadInvoices();
+                },
               ),
             ],
           ),
-          SliverToBoxAdapter(
-            child: Container(
-              height: 45,
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: TabBar(
-                splashBorderRadius: BorderRadius.circular(100),
-                indicatorAnimation: TabIndicatorAnimation.elastic,
-                dividerHeight: 0,
-                unselectedLabelColor: Theme.of(context).hintColor,
-                indicatorWeight: 1,
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: const EdgeInsetsGeometry.symmetric(
-                  horizontal: 0,
-                  vertical: 1,
-                ),
-                indicatorColor: Theme.of(context).cardColor,
-                indicator: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withAlpha(60),
-                  border: Border.all(color: Theme.of(context).primaryColor),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                controller: tabController,
-                tabs: const [
-                  Tab(text: 'All'),
-                  Tab(text: 'Paid'),
-                  Tab(text: 'Pending'),
-                  Tab(text: 'Overdue'),
-                ],
-              ),
-            ),
-          ),
           BlocBuilder<TransactionBloc, TransactionState>(
             builder: (context, state) {
-              if (state.latest.isLoadingLatest) {
+              if (state.invoices.isLoadingInvoices) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 ).toSliver();
               }
 
-              if (state.latest.latestError != null) {
+              if (state.invoices.invoicesError != null) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Text(
-                      state.latest.latestError!,
+                      state.invoices.invoicesError!,
                       style: const TextStyle(
                         color: AppColors.darkTextSecondary,
                       ),
@@ -123,7 +204,7 @@ class _InvoiceScreenState extends State<InvoiceScreen>
                 ).toSliver();
               }
 
-              if (state.latest.latestExpenses.isEmpty) {
+              if (state.invoices.invoices.isEmpty) {
                 return Center(
                   child: Container(
                     decoration: BoxDecoration(
@@ -183,7 +264,7 @@ class _InvoiceScreenState extends State<InvoiceScreen>
                             const InvoiceInfoCard(
                               icon: LucideIcons.send,
                               title: 'Easy sharing',
-                              subTitle: 'Send via link email or PDF',
+                              subTitle: 'Send via link email',
                             ),
                             Container(
                               width: 1,
@@ -207,10 +288,61 @@ class _InvoiceScreenState extends State<InvoiceScreen>
               }
 
               return SliverList.builder(
-                itemCount: state.latest.latestExpenses.length,
+                itemCount: state.invoices.invoices.length,
                 itemBuilder: (context, index) {
-                  final invoice = state.latest.latestExpenses[index];
-                  return _InvoiceCard(invoice: invoice);
+                  final invoice = state.invoices.invoices[index];
+                  final gstLabel = invoice.isInterState ? 'IGST' : 'CGST+SGST';
+                  final dateStr = DateFormat(
+                    'MMM d, yyyy',
+                  ).format(invoice.date);
+                  final gstAmount = invoice.cgst + invoice.sgst + invoice.igst;
+
+                  void openDetails() {
+                    final localId = invoice.localId;
+                    if (localId == null) return;
+                    context.pushNamed(
+                      RouterConstants.transactionDetails,
+                      extra: localId,
+                    );
+                  }
+
+                  void editInvoice() {
+                    final localId = invoice.localId;
+                    if (localId == null) return;
+                    context.pushNamed(
+                      RouterConstants.editInvoice,
+                      pathParameters: {'id': localId.toString()},
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TransactionCardWidget(
+                      transactionUid: invoice.uid,
+                      transactionLocalId: invoice.localId,
+                      title:
+                          invoice.clientName ??
+                          invoice.invoiceNumber ??
+                          'Invoice',
+                      subTitle: dateStr,
+                      subTitleTrailing: AccentChip(
+                        label: gstLabel,
+                        compact: true,
+                        selected: invoice.isInterState,
+                      ),
+                      icon: LucideIcons.fileText,
+                      iconColor: AppColors.primary,
+                      mainAmount: invoice.totalAmount,
+                      subAmount: gstAmount,
+                      subAmountPrefix: 'GST: ',
+                      amountFractionDigits: 2,
+                      onTap: openDetails,
+                      onEdit: editInvoice,
+                      invoiceActions: true,
+                      onMenuAction: (action) =>
+                          _handleMenuAction(action, invoice),
+                    ),
+                  );
                 },
               );
             },
@@ -258,110 +390,6 @@ class InvoiceInfoCard extends StatelessWidget {
             style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _InvoiceCard extends StatelessWidget {
-  final TransactionEntity invoice;
-
-  const _InvoiceCard({required this.invoice});
-
-  @override
-  Widget build(BuildContext context) {
-    final gstLabel = invoice.isInterState ? 'IGST' : 'CGST+SGST';
-    final dateStr = DateFormat('MMM d, yyyy').format(invoice.date);
-    final displayName =
-        invoice.clientName ?? invoice.invoiceNumber ?? 'Invoice';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      child: GestureDetector(
-        onTap: () {
-          context.read<TransactionBloc>().add(PopulateInvoiceForm(invoice));
-          context.pushNamed(RouterConstants.editInvoice, extra: invoice);
-        },
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Theme.of(context).focusColor,
-                ),
-                child: const Icon(
-                  LucideIcons.fileText,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          dateStr,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).hintColor,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        AccentChip(
-                          label: gstLabel,
-                          compact: true,
-                          selected: invoice.isInterState,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    invoice.totalAmount.toStringAsFixed(2),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Text(
-                    'GST: ${(invoice.cgst + invoice.sgst + invoice.igst).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightTextMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

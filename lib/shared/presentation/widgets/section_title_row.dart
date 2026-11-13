@@ -13,8 +13,10 @@ class SectionTitleRow extends StatelessWidget {
 
   /// The section title text.
   final String title;
+
   /// The label for the optional action button.
   final String? action;
+
   /// Callback when the action button is tapped.
   final VoidCallback? onActionTap;
 

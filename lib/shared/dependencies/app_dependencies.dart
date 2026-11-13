@@ -24,13 +24,16 @@ import 'package:inveio/auth/data/repositories/auth_repository_impl.dart';
 import 'package:inveio/auth/domain/repositories/auth_repository.dart';
 import 'package:inveio/auth/domain/usecases/sign_up_with_email_use_case.dart';
 import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
-import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
 import 'package:inveio/transaction/data/models/transaction_model.dart';
 import 'package:inveio/transaction/data/datasources/local/transaction_data_source.dart';
 import 'package:inveio/transaction/data/datasources/local/isar_transaction_data_source_impl.dart';
 import 'package:inveio/transaction/data/repositories/transaction_repository_impl.dart';
 import 'package:inveio/transaction/domain/repositories/transaction_repository.dart';
 import 'package:inveio/transaction/presentation/bloc/transaction_bloc.dart';
+import 'package:inveio/expenses/presentation/cubit/expense_form_cubit.dart';
+import 'package:inveio/invoice/domain/services/invoice_pdf_generator.dart';
+import 'package:inveio/invoice/presentation/cubit/invoice_form_cubit.dart';
+import 'package:inveio/invoice/presentation/cubit/invoice_pdf_cubit.dart';
 import 'package:inveio/profile/data/models/user_model.dart';
 import 'package:inveio/shared/secrets/app_secrets.dart';
 import 'package:inveio/firebase_options.dart';
@@ -47,6 +50,12 @@ import 'package:inveio/profile/data/datasources/local/user_local_data_source_imp
 import 'package:inveio/profile/data/repositories/user_repository_impl.dart';
 import 'package:inveio/profile/domain/repositories/user_repository.dart';
 import 'package:inveio/profile/presentation/bloc/user_bloc.dart';
+import 'package:inveio/settings/data/datasources/local/app_settings_local_data_source.dart';
+import 'package:inveio/settings/data/repositories/app_settings_repository_impl.dart';
+import 'package:inveio/settings/data/services/csv_export_service.dart';
+import 'package:inveio/settings/domain/repositories/app_settings_repository.dart';
+import 'package:inveio/settings/presentation/cubit/export_data_cubit.dart';
+import 'package:inveio/settings/presentation/cubit/theme_cubit.dart';
 
 /// Central service locator using GetIt to register and resolve dependencies.
 class AppDependencies {
@@ -139,6 +148,31 @@ class AppDependencies {
     }
   }
 
+  /// Registers app settings dependencies (data source, repository, cubit).
+  static Future<void> initSettings() async {
+    if (!sl.isRegistered<AppSettingsLocalDataSource>()) {
+      sl.registerLazySingleton<AppSettingsLocalDataSource>(
+        () => AppSettingsLocalDataSource(prefs: sl()),
+      );
+    }
+    if (!sl.isRegistered<AppSettingsRepository>()) {
+      sl.registerLazySingleton<AppSettingsRepository>(
+        () => AppSettingsRepositoryImpl(local: sl()),
+      );
+    }
+    if (!sl.isRegistered<ThemeCubit>()) {
+      sl.registerFactory<ThemeCubit>(() => ThemeCubit(repository: sl()));
+    }
+    if (!sl.isRegistered<CsvExportService>()) {
+      sl.registerLazySingleton<CsvExportService>(() => CsvExportService());
+    }
+    if (!sl.isRegistered<ExportDataCubit>()) {
+      sl.registerFactory<ExportDataCubit>(
+        () => ExportDataCubit(repository: sl(), exportService: sl()),
+      );
+    }
+  }
+
   /// Registers transaction-related dependencies (data source, repository, bloc).
   static Future<void> initTransactions() async {
     if (!sl.isRegistered<TransactionDataSource>()) {
@@ -152,12 +186,40 @@ class AppDependencies {
       );
     }
     if (!sl.isRegistered<TransactionBloc>()) {
-      sl.registerFactoryParam<TransactionBloc, TransactionType, void>(
-        (type, _) => TransactionBloc(
+      sl.registerFactory<TransactionBloc>(
+        () => TransactionBloc(
           transactionRepository: sl(),
-          onboardingLocalDatasource: sl(),
           uid: FirebaseAuth.instance.currentUser?.uid ?? '',
-          type: type,
+        ),
+      );
+    }
+    if (!sl.isRegistered<ExpenseFormCubit>()) {
+      sl.registerFactory<ExpenseFormCubit>(
+        () => ExpenseFormCubit(
+          transactionRepository: sl(),
+          onboardingLocalDataSource: sl(),
+          uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+        ),
+      );
+    }
+    if (!sl.isRegistered<InvoiceFormCubit>()) {
+      sl.registerFactory<InvoiceFormCubit>(
+        () => InvoiceFormCubit(
+          transactionRepository: sl(),
+          onboardingLocalDataSource: sl(),
+          uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+        ),
+      );
+    }
+    if (!sl.isRegistered<InvoicePdfGenerator>()) {
+      sl.registerLazySingleton<InvoicePdfGenerator>(() => const InvoicePdfGenerator());
+    }
+    if (!sl.isRegistered<InvoicePdfCubit>()) {
+      sl.registerFactory<InvoicePdfCubit>(
+        () => InvoicePdfCubit(
+          onboardingRepository: sl(),
+          generator: sl(),
+          uid: FirebaseAuth.instance.currentUser?.uid ?? '',
         ),
       );
     }

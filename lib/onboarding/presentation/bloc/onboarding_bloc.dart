@@ -5,7 +5,6 @@ import 'package:inveio/onboarding/domain/entities/onboarding_entity.dart';
 import 'package:inveio/onboarding/domain/usecases/create_onboarding_status_use_case.dart';
 import 'package:inveio/onboarding/domain/usecases/save_onboarding_use_case.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'onboarding_event.dart';
@@ -34,6 +33,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     on<CheckOnboardingStatus>(_onCheckOnboardingStatus);
     on<BusinessNameChanged>(_onBusinessNameChanged);
+    on<BusinessAddressChanged>(_onBusinessAddressChanged);
+    on<BusinessLogoChanged>(_onBusinessLogoChanged);
     on<GstinChanged>(_onGstinChanged);
     on<WorkTypeSelected>(_onWorkTypeSelected);
     on<OnboardingSubmitted>(_onOnboardingSubmitted);
@@ -53,13 +54,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     result.fold(
       (failure) => emit(OnboardingFailure(state.onboarding, failure.message)),
-      (complete) {
-        emit(
-          OnboardingInitial(
-            state.onboarding.copyWith(onboardingComplete: complete),
-          ),
-        );
-      },
+      (onboarding) => emit(OnboardingInitial(onboarding)),
     );
   }
 
@@ -69,6 +64,22 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   ) {
     final current = state.onboarding;
     emit(OnboardingInitial(current.copyWith(businessName: event.name)));
+  }
+
+  void _onBusinessAddressChanged(
+    BusinessAddressChanged event,
+    Emitter<OnboardingState> emit,
+  ) {
+    final current = state.onboarding;
+    emit(OnboardingInitial(current.copyWith(address: event.address)));
+  }
+
+  void _onBusinessLogoChanged(
+    BusinessLogoChanged event,
+    Emitter<OnboardingState> emit,
+  ) {
+    final current = state.onboarding;
+    emit(OnboardingInitial(current.copyWith(logoPath: event.logoPath)));
   }
 
   void _onGstinChanged(GstinChanged event, Emitter<OnboardingState> emit) {

@@ -15,14 +15,19 @@ class AppCard extends StatelessWidget {
 
   /// Inner padding of the card.
   final EdgeInsets? padding;
+
   /// Outer margin of the card.
   final EdgeInsets? margin;
+
   /// Border radius of the card (default: 20).
   final double? radius;
+
   /// Background color of the card.
   final Color? color;
+
   /// Border color of the card.
   final Color? borderColor;
+
   /// The widget wrapped by this card.
   final Widget child;
 

@@ -72,10 +72,13 @@ class ProfileHeader extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(LucideIcons.chevronRight),
+              Flexible(
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(LucideIcons.chevronRight),
+                ),
               ),
+              const SizedBox(width: 15),
             ],
           ),
         ),

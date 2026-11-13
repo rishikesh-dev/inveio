@@ -1,6 +1,5 @@
 part of 'auth_bloc.dart';
 
-@immutable
 /// Base sealed class for all authentication events.
 sealed class AuthEvent extends Equatable {
   /// Creates an [AuthEvent].

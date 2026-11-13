@@ -72,6 +72,20 @@ android/**/build/
 *.apk
 *.aab
 
+# Signing — never commit
+android/key.properties
+key.properties
+*.jks
+*.keystore
+
+# Firebase / environment secrets
+GoogleService-Info.plist
+.env
+.env.*
+
+# Local audit output
+AUDIT.md
+
 # IDE
 .idea/
 .vscode/
@@ -80,3 +94,38 @@ android/**/build/
 # OS
 .DS_Store
 Thumbs.db
+
+.kilo/
+
+# AI coding agent files
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.codex/
+.continue/
+.aider*
+AGENTS.md
+CLAUDE.md
+.github/copilot-instructions.md
+.mcp.json
+
+# API keys / credentials — never commit
+lib/shared/secrets/
+android/app/google-services.json
+**/google-services.json
+**/GoogleService-Info.plist
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+key.properties
+serviceAccountKey.json
+.env
+.env.*
+!.env.example
+
+# Planning / audit docs
+assets/plan/
+AUDIT.md

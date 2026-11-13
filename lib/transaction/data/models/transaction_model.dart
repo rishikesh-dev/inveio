@@ -107,6 +107,7 @@ class TransactionModel {
   /// Converts this model to a [TransactionEntity].
   TransactionEntity toEntity() {
     return TransactionEntity(
+      localId: isarId == Isar.autoIncrement ? null : isarId,
       id: id,
       uid: uid,
       type: type,

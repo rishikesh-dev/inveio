@@ -3,7 +3,6 @@ import 'package:inveio/auth/domain/usecases/params/user_details_params.dart';
 import 'package:inveio/auth/domain/usecases/sign_up_with_email_use_case.dart';
 import 'package:inveio/profile/domain/entities/user_entity.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'auth_event.dart';
@@ -13,8 +12,6 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// Repository for authentication operations.
   final AuthRepository _authRepository;
-  
-
 
   /// Use case for signing up with email and password.
   final SignUpWithEmailUseCase _signUpWithEmailUseCase;

@@ -41,10 +41,27 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<Either<Failure, List<TransactionEntity>>> getAllTransactions() async {
+  Future<Either<Failure, List<TransactionEntity>>> getAllTransactions({
+    TransactionType? type,
+  }) async {
     try {
       final models = await _localDataSource.getAllTransactions();
-      return right(models.map((m) => m.toEntity()).toList());
+      final filtered = type != null
+          ? models.where((m) => m.type == type).toList()
+          : models;
+      return right(filtered.map((m) => m.toEntity()).toList());
+    } catch (e) {
+      return left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, TransactionEntity?>> getTransactionByLocalId(
+    int localId,
+  ) async {
+    try {
+      final model = await _localDataSource.getTransactionByLocalId(localId);
+      return right(model?.toEntity());
     } catch (e) {
       return left(CacheFailure(e.toString()));
     }
@@ -54,6 +71,16 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<Either<Failure, void>> deleteTransaction(int localId) async {
     try {
       await _localDataSource.deleteTransaction(localId);
+      return right(null);
+    } catch (e) {
+      return left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> clearHistory() async {
+    try {
+      await _localDataSource.deleteAllTransactions();
       return right(null);
     } catch (e) {
       return left(CacheFailure(e.toString()));

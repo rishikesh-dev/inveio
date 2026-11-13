@@ -7,18 +7,20 @@ class InvoiceSaveButton extends StatelessWidget {
     super.key,
     required this.isSaving,
     required this.onPressed,
+    this.label = 'Save invoice',
   });
 
   /// Whether the save operation is in progress.
   final bool isSaving;
+
   /// Callback when the save button is pressed.
   final VoidCallback onPressed;
 
+  /// Button text, which differs between create and edit.
+  final String label;
+
   @override
   Widget build(BuildContext context) {
-    return NeonButton(
-      label: 'Save invoice',
-      onPressed: isSaving ? null : onPressed,
-    );
+    return NeonButton(label: label, onPressed: isSaving ? null : onPressed);
   }
 }

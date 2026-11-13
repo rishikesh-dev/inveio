@@ -15,10 +15,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 /// between deactivating and permanently deleting their account.
 class DeleteAccountConfirmationScreen extends StatefulWidget {
   /// Creates a [DeleteAccountConfirmationScreen] for the given [userData].
-  const DeleteAccountConfirmationScreen({
-    super.key,
-    required this.userData,
-  });
+  const DeleteAccountConfirmationScreen({super.key, required this.userData});
 
   /// The user data of the account being deactivated or deleted.
   final UserEntity userData;

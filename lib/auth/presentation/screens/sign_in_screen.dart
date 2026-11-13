@@ -8,6 +8,7 @@ import 'package:inveio/shared/routes/app_router_config.dart';
 import 'package:inveio/shared/routes/router_constants.dart';
 import 'package:inveio/shared/theme/app_colors.dart';
 import 'package:inveio/shared/utils/effects/animated_entrance.dart';
+import 'package:inveio/shared/utils/password_validator.dart';
 import 'package:inveio/shared/presentation/widgets/app_bar_widget.dart';
 import 'package:inveio/shared/presentation/widgets/text_field_widget.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     onboardingBloc.add(CheckOnboardingStatus(state.user.uid));
                   }
                   if (state is AuthErrorState) {
-                    debugPrint('Auth error: ${state.message}');
+                    debugPrint('Auth error: ${state.code}');
                     ScaffoldMessenger.of(context)
                       ..hideCurrentSnackBar()
                       ..showSnackBar(SnackBar(content: Text(state.message)));
@@ -135,15 +136,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                         state.message.contains('password')
                                     ? state.message
                                     : null,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your password';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Password must be at least 6 characters long';
-                                  }
-                                  return null;
-                                },
+                                validator: PasswordValidator.validate,
                                 prefix: Icon(
                                   _obscurePassword.value
                                       ? LucideIcons.lockKeyhole

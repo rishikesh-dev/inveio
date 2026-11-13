@@ -36,8 +36,8 @@ class TransactionInfoCard extends StatelessWidget {
                   t.paymentMode == PaymentMode.cash
                       ? 'Cash'
                       : t.paymentMode == PaymentMode.upi
-                          ? 'UPI'
-                          : 'Card',
+                      ? 'UPI'
+                      : 'Card',
                   style: const TextStyle(
                     color: AppColors.darkTextPrimary,
                     fontSize: 15,

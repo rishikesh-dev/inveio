@@ -111,14 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   icon: LucideIcons.chartArea,
                                   title: 'Insights',
                                   onTap: () {
-                                    indexBottomNotifier.value = 2;
-                                  },
-                                ),
-                                QuickActionWidget(
-                                  icon: LucideIcons.banknote,
-                                  title: 'Transfer',
-                                  onTap: () {
-                                    indexBottomNotifier.value = 2;
+                                    context.pushNamed(RouterConstants.reports);
                                   },
                                 ),
                               ],
@@ -205,14 +198,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) {
                         final expense = state.latest.latestExpenses[index];
                         return TransactionCardWidget(
+                          transactionLocalId: expense.localId,
+                          transactionUid: expense.uid,
                           title:
                               expense.vendorName ??
                               expense.category ??
                               expense.description,
-                          onTap: () => context.pushNamed(
-                            RouterConstants.transactionDetails,
-                            extra: expense.id,
-                          ),
+                          onTap: () {
+                            final localId = expense.localId;
+                            if (localId == null) return;
+                            context.pushNamed(
+                              RouterConstants.transactionDetails,
+                              extra: localId,
+                            );
+                          },
                           icon: Icons.currency_rupee_sharp,
                           subTitle:
                               '${DateFormat('MMM d').format(expense.date)}'

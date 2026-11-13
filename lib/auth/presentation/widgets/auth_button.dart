@@ -10,10 +10,13 @@ class AuthButton extends StatelessWidget {
     required this.icon,
     required this.label,
   });
+
   /// The icon widget displayed on the button.
   final Widget icon;
+
   /// The text label displayed on the button.
   final String label;
+
   /// The callback invoked when the button is pressed.
   final VoidCallback? onPressed;
 
@@ -22,13 +25,14 @@ class AuthButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 52,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.darkBorder),
+          backgroundColor: AppColors.darkInput,
+          side: const BorderSide(color: AppColors.darkBorder, width: 1),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
           ),
           foregroundColor: AppColors.darkTextPrimary,
         ),
@@ -36,13 +40,13 @@ class AuthButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             icon,
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Text(
               label,
               style: const TextStyle(
                 color: AppColors.darkTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

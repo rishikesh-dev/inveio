@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inveio/shared/theme/app_colors.dart';
 
 /// A styled elevated button with an optional icon and custom border radius.
 class NeonButton extends StatelessWidget {
@@ -42,28 +43,42 @@ class NeonButton extends StatelessWidget {
   @override
   /// Builds the elevated button with an optional icon and custom shape.
   Widget build(BuildContext context) {
+    final effectiveColor = color ?? AppColors.primary;
     return SizedBox(
-      height: height,
+      height: height ?? 52,
       child: Padding(
         padding: margin ?? const EdgeInsets.all(0),
         child: ElevatedButton.icon(
           onPressed: onPressed,
-          icon: icon != null ? Icon(icon) : null,
+          icon: icon != null
+              ? Icon(icon, color: AppColors.darkBg, size: 20)
+              : null,
           iconAlignment: iconAlignment,
-          style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-            backgroundColor: WidgetStatePropertyAll(color),
-            padding: WidgetStatePropertyAll(padding ?? const EdgeInsets.all(0)),
-            shape: WidgetStatePropertyAll(
-              RoundedRectangleBorder(
-                borderRadius: borderRadius ?? BorderRadius.circular(12),
-              ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: effectiveColor,
+            foregroundColor: AppColors.darkBg,
+            elevation: 0,
+            padding: padding ?? EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: borderRadius ?? BorderRadius.circular(12),
             ),
+            textStyle:
+                labelStyle ??
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.darkBg,
+                ),
           ),
           label: Text(
             label,
             style:
                 labelStyle ??
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.darkBg,
+                ),
           ),
         ),
       ),

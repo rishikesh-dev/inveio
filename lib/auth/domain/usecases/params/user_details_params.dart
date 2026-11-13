@@ -2,12 +2,16 @@
 class UserDetailsParams {
   /// The user's full name.
   final String name;
+
   /// The user's email address.
   final String email;
+
   /// The user's phone number (optional).
   final String? phone;
+
   /// The user's photo URL (optional).
   final String? photoUrl;
+
   /// The user's chosen password.
   final String password;
 

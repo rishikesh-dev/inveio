@@ -2,7 +2,6 @@ import 'package:inveio/profile/data/models/user_model.dart';
 import 'package:inveio/profile/data/datasources/local/user_local_data_source.dart';
 import 'package:isar_community/isar.dart';
 
-
 /// Isar-backed implementation of [UserLocalDataSource].
 class UserLocalDataSourceImpl extends UserLocalDataSource {
   final Isar _isar;

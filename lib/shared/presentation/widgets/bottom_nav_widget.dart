@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class BottomNavWidget extends StatelessWidget {
   /// Notifier that tracks the currently selected tab index.
   final ValueNotifier<int> bottomNavIndex;
+
   /// Creates a [BottomNavWidget] bound to the given [bottomNavIndex] notifier.
   const BottomNavWidget({super.key, required this.bottomNavIndex});
 
@@ -14,11 +15,13 @@ class BottomNavWidget extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: bottomNavIndex,
       builder: (context, value, child) => ClipRRect(
-        
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         child: BottomNavigationBar(
           currentIndex: value,
-          onTap: (value) => bottomNavIndex.value = value,
+          onTap: (value) {
+            if (value == 2) return;
+            bottomNavIndex.value = value;
+          },
           elevation: 0,
           selectedFontSize: 12,
           unselectedFontSize: 12,

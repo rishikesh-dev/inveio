@@ -21,22 +21,6 @@ class SecurityScreen extends StatelessWidget {
                 spacing: 10,
                 children: [
                   SettingsTile(
-                    onTap: () {},
-                    icon: LucideIcons.lockKeyhole,
-                    title: 'App Lock',
-                    subtitle: 'Use biometrics or passcode to protect your app',
-                    borderRadius: 12,
-                  ),
-                  SettingsTile(
-                    onTap: () {},
-                    icon: LucideIcons.fingerprint,
-                    title: 'Biometric Authentication',
-                    subtitle: 'Use Face ID/Touch ID',
-                    borderRadius: 12,
-                    contentPadding: const EdgeInsets.only(right: 7, left: 12),
-                    trailingWidget: Switch(value: true, onChanged: (value) {}),
-                  ),
-                  SettingsTile(
                     onTap: () {
                       context.pushNamed(RouterConstants.changePasswordScreen);
                     },

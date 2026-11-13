@@ -4,6 +4,7 @@ import 'package:inveio/auth/data/datasources/remote/auth_remote_data_source.dart
 import 'package:inveio/profile/data/models/user_model.dart';
 import 'package:inveio/profile/domain/entities/user_entity.dart';
 import 'package:inveio/auth/domain/repositories/auth_repository.dart';
+import 'package:inveio/shared/errors/exceptions.dart';
 import 'package:inveio/shared/errors/failure.dart';
 import 'package:inveio/profile/data/datasources/remote/user_remote_data_source.dart';
 import 'package:inveio/profile/data/datasources/local/user_local_data_source.dart'
@@ -93,6 +94,8 @@ class AuthRepositoryImpl extends AuthRepository {
 
       await _userLocalDataSource.saveProfile(remoteUser);
       return right(remoteUser.toEntity());
+    } on AuthCancelledException {
+      return left(const AuthCancelledFailure());
     } on TimeoutException {
       return left(const NetworkFailure('Connection timed out'));
     } on SocketException catch (e) {

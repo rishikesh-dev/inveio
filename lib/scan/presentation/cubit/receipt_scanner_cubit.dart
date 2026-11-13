@@ -1,4 +1,5 @@
-import 'package:inveio/scan/domain/entities/scan_receipt_entity.dart';
+import 'package:inveio/scan/domain/entities/parsed_receipt.dart';
+import 'package:inveio/scan/domain/failures/scan_failures.dart';
 import 'package:inveio/scan/domain/repositories/scan_receipt_repository.dart';
 
 import 'package:equatable/equatable.dart';
@@ -11,9 +12,19 @@ class ReceiptScannerCubit extends Cubit<ReceiptScannerState> {
   ReceiptScannerCubit({required this.scanReceiptRepository})
     : super(ReceiptScannerInitial());
   Future<void> scanReceipt() async {
+    // Reset first so every scan (including a retake) is handled fresh by the
+    // screen. Starting from the initial state already means "not handled".
+    if (state is! ReceiptScannerInitial) emit(ReceiptScannerInitial());
     final result = await scanReceiptRepository.scanReceipt();
     await result.fold(
-      (failure) async => emit(ScannerFailure(failure.message)),
+      (failure) async {
+        if (failure is ScanCancelledFailure) {
+          // Cancelling is not an error: return to the idle state silently.
+          if (state is! ReceiptScannerInitial) emit(ReceiptScannerInitial());
+          return;
+        }
+        emit(ScannerFailure(failure.message));
+      },
       (success) async {
         final imagePath = success.path;
         final extractInfo = await scanReceiptRepository.extractReceiptData(
@@ -21,9 +32,8 @@ class ReceiptScannerCubit extends Cubit<ReceiptScannerState> {
         );
         extractInfo.fold(
           (failure) => emit(ScannerFailure(failure.message)),
-          (extractedInfo) => emit(
-            ScannerSuccess(extractedInfo, imagePath: imagePath),
-          ),
+          (extractedInfo) =>
+              emit(ScannerSuccess(extractedInfo, imagePath: imagePath)),
         );
       },
     );

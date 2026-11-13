@@ -12,14 +12,19 @@ class QuickActionWidget extends StatelessWidget {
     this.iconColor,
     this.onTap,
   });
+
   /// The icon displayed inside the circle.
   final IconData icon;
+
   /// The label displayed below the icon.
   final String title;
+
   /// Background color of the icon circle.
   final Color? bgColor;
+
   /// Color of the icon.
   final Color? iconColor;
+
   /// Callback when the action is tapped.
   final Function()? onTap;
   @override
