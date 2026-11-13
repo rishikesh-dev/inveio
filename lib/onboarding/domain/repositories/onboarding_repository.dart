@@ -7,6 +7,9 @@ abstract class OnboardingRepository {
   /// Persists the given onboarding [data] to both remote and local storage.
   Future<Either<Failure, void>> saveOnboarding(OnboardingEntity data);
 
+  /// Loads the persisted onboarding data, pulling from remote on first run.
+  Future<Either<Failure, OnboardingEntity>> getOnboarding(String uid);
+
   /// Returns whether the user has completed the onboarding flow.
   Future<Either<Failure, bool>> isOnboardingComplete(String uid);
 

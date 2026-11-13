@@ -5,6 +5,12 @@ class OnboardingModel {
   /// The business name entered during onboarding.
   final String? businessName;
 
+  /// The business address, or `null` if not provided.
+  final String? address;
+
+  /// Local path to the business logo, or `null` if not set.
+  final String? logoPath;
+
   /// The GSTIN entered, or `null` if skipped.
   final String? gstin;
 
@@ -22,6 +28,8 @@ class OnboardingModel {
   /// Creates an [OnboardingModel] with the given fields.
   const OnboardingModel({
     required this.businessName,
+    this.address,
+    this.logoPath,
     this.gstin,
     this.gstinStatus,
     this.workType,
@@ -33,6 +41,8 @@ class OnboardingModel {
   factory OnboardingModel.fromEntity(OnboardingEntity entity) {
     return OnboardingModel(
       businessName: entity.businessName,
+      address: entity.address,
+      logoPath: entity.logoPath,
       gstin: entity.gstin,
       gstinStatus: entity.gstinStatus,
       workType: entity.workType?.name,
@@ -44,6 +54,8 @@ class OnboardingModel {
   OnboardingEntity toEntity() {
     return OnboardingEntity(
       businessName: businessName,
+      address: address,
+      logoPath: logoPath,
       gstin: gstin,
       gstinStatus: gstinStatus,
       workType: workType != null ? WorkType.values.byName(workType!) : null,
@@ -55,6 +67,8 @@ class OnboardingModel {
   Map<String, dynamic> toJson() {
     return {
       'businessName': businessName,
+      'address': address,
+      'logoPath': logoPath,
       'gstin': gstin,
       'gstinStatus': gstinStatus?.name,
       'workType': workType,
@@ -67,6 +81,8 @@ class OnboardingModel {
   factory OnboardingModel.fromJson(Map<String, dynamic> json) {
     return OnboardingModel(
       businessName: json['businessName'] as String,
+      address: json['address'] as String?,
+      logoPath: json['logoPath'] as String?,
       gstin: json['gstin'] as String?,
       gstinStatus: json['gstinStatus'] != null
           ? GstinStatus.values.byName(json['gstinStatus'] as String)

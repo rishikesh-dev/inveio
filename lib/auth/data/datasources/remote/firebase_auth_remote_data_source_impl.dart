@@ -1,6 +1,7 @@
 import 'package:inveio/auth/data/datasources/remote/auth_remote_data_source.dart';
 import 'package:inveio/auth/data/datasources/remote/auth_failure_helper.dart';
 import 'package:inveio/profile/data/models/user_model.dart';
+import 'package:inveio/shared/errors/exceptions.dart';
 import 'package:inveio/shared/errors/failure.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -152,6 +153,11 @@ class FirebaseAuthRemoteDataSourceImpl extends AuthRemoteDataSource {
       );
 
       return userModel;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthCancelledException();
+      }
+      throw Exception('Google sign-in failed. Please try again.');
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {

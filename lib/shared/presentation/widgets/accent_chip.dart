@@ -11,14 +11,19 @@ class AccentChip extends StatelessWidget {
     this.icon,
     this.onTap,
   });
+
   /// The text displayed on the chip.
   final String label;
+
   /// Whether the chip appears in the selected (highlighted) state.
   final bool? selected;
+
   /// Whether to render the chip in a compact size.
   final bool? compact;
+
   /// Callback when the chip is tapped.
   final VoidCallback? onTap;
+
   /// Optional icon shown before the label.
   final IconData? icon;
 

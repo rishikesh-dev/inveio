@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ReportsHeader extends StatelessWidget {
-  const ReportsHeader({super.key, required this.period, required this.onPeriodTap});
+  const ReportsHeader({
+    super.key,
+    required this.period,
+    required this.onPeriodTap,
+  });
 
   final String period;
   final VoidCallback onPeriodTap;

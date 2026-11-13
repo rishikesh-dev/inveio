@@ -1,10 +1,12 @@
 import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
 import 'package:inveio/auth/presentation/widgets/sign_up_footer.dart';
-import 'package:inveio/shared/constants/app_constants.dart';
 import 'package:inveio/shared/presentation/widgets/neon_button.dart';
+import 'package:inveio/shared/presentation/widgets/password_checklist.dart';
 import 'package:inveio/shared/presentation/widgets/text_field_widget.dart';
 import 'package:inveio/shared/theme/app_colors.dart';
+import 'package:inveio/shared/theme/app_text_styles.dart';
 import 'package:inveio/shared/utils/effects/animated_entrance.dart';
+import 'package:inveio/shared/utils/password_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -60,158 +62,48 @@ class SignUpFormBody extends StatelessWidget {
     return Form(
       key: formKey,
       child: Column(
-        spacing: 10,
-        mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Create account',
-            style: TextStyle(
-              height: 0.8,
+            style: AppTextStyles.displayMedium.copyWith(
               color: AppColors.darkTextPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+              height: 1.1,
             ),
           ).toAnimatedEntrance(delay: const Duration(milliseconds: 60)),
-          const Text(
-            'Join ${AppConstants.appName} to start managing your expenses.',
-            style: TextStyle(
+          const SizedBox(height: 8),
+          Text(
+            'Start managing your money with Inveio.',
+            style: AppTextStyles.bodyLarge.copyWith(
               color: AppColors.darkTextSecondary,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ).toAnimatedEntrance(delay: const Duration(milliseconds: 110)),
-          const SizedBox(height: 20),
-          TextFieldWidget(
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your full name';
-              }
-              if (value.trim().length < 2) {
-                return 'Name looks too short';
-              }
-              return null;
-            },
-            verticalMargin: 2,
-            contentPaddingVertical: 17,
-            hintText: 'Full Name',
-            prefix: const Icon(LucideIcons.user, size: 20),
-            controller: fullNameController,
-          ).toAnimatedEntrance(delay: const Duration(milliseconds: 150)),
-          TextFieldWidget(
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email address';
-              }
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
-                return 'Please enter a valid email address';
-              }
-              return null;
-            },
-            errorText:
-                state is AuthErrorState && state.message.contains('email')
-                ? state.message
-                : null,
-            verticalMargin: 2,
-            contentPaddingVertical: 17,
-            hintText: 'Email',
-            prefix: const Icon(LucideIcons.mail, size: 20),
-            controller: emailController,
-          ).toAnimatedEntrance(delay: const Duration(milliseconds: 150)),
-          ListenableBuilder(
-            listenable: Listenable.merge([obscurePassword, passwordController]),
-            builder: (context, _) => TextFieldWidget(
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your password';
-                }
-                if (value.length < 6) {
-                  return 'Password must be at least 6 characters long';
-                }
-                return null;
-              },
-              errorText:
-                  state is AuthErrorState && state.message.contains('password')
-                  ? state.message
-                  : null,
-              verticalMargin: 2,
-              contentPaddingVertical: 17,
-              hintText: 'Password',
-              prefix: Icon(
-                obscurePassword.value
-                    ? LucideIcons.lockKeyhole
-                    : LucideIcons.lockKeyholeOpen,
-                size: 20,
-              ),
-              controller: passwordController,
-              obscureText: obscurePassword.value,
-              suffix: GestureDetector(
-                onTap: () => obscurePassword.value = !obscurePassword.value,
-                child: passwordController.text.isNotEmpty
-                    ? Icon(
-                        obscurePassword.value
-                            ? LucideIcons.eye
-                            : LucideIcons.eyeOff,
-                        color: AppColors.darkTextSecondary,
-                        size: 20,
-                      )
-                    : const SizedBox(),
-              ),
-            ),
+          const SizedBox(height: 32),
+          _buildFullNameField().toAnimatedEntrance(
+            delay: const Duration(milliseconds: 150),
           ),
-          ListenableBuilder(
-            listenable: Listenable.merge([
-              obscureConfirmPassword,
-              confirmPasswordController,
-            ]),
-            builder: (context, _) => TextFieldWidget(
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your password';
-                }
-                if (value.length < 6) {
-                  return 'Password must be at least 6 characters long';
-                }
-                if (value != passwordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
-              errorText:
-                  state is AuthErrorState && state.message.contains('password')
-                  ? state.message
-                  : null,
-              verticalMargin: 2,
-              contentPaddingVertical: 17,
-              hintText: 'Confirm Password',
-              prefix: Icon(
-                obscureConfirmPassword.value
-                    ? LucideIcons.lockKeyhole
-                    : LucideIcons.lockKeyholeOpen,
-                size: 20,
-              ),
-              controller: confirmPasswordController,
-              obscureText: obscureConfirmPassword.value,
-              suffix: GestureDetector(
-                onTap: () => obscureConfirmPassword.value =
-                    !obscureConfirmPassword.value,
-                child: confirmPasswordController.text.isNotEmpty
-                    ? Icon(
-                        obscureConfirmPassword.value
-                            ? LucideIcons.eye
-                            : LucideIcons.eyeOff,
-                        color: AppColors.darkTextSecondary,
-                        size: 20,
-                      )
-                    : const SizedBox(),
-              ),
-            ),
+          const SizedBox(height: 16),
+          _buildEmailField().toAnimatedEntrance(
+            delay: const Duration(milliseconds: 160),
           ),
-          const SizedBox(),
+          const SizedBox(height: 16),
+          _buildPasswordField().toAnimatedEntrance(
+            delay: const Duration(milliseconds: 170),
+          ),
+          const SizedBox(height: 8),
+          PasswordChecklist(
+            controller: passwordController,
+          ).toAnimatedEntrance(delay: const Duration(milliseconds: 180)),
+          const SizedBox(height: 16),
+          _buildConfirmPasswordField().toAnimatedEntrance(
+            delay: const Duration(milliseconds: 190),
+          ),
+          const SizedBox(height: 28),
           NeonButton(
             label: state is AuthLoading
                 ? 'Creating account...'
-                : 'Create Account',
+                : 'Create account',
             onPressed: state is AuthLoading ? null : onSignUp,
           ).toAnimatedEntrance(delay: const Duration(milliseconds: 240)),
           SignUpFooter(
@@ -219,6 +111,120 @@ class SignUpFormBody extends StatelessWidget {
             isAuthLoading: state is AuthLoading,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFullNameField() {
+    return TextFieldWidget(
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your full name';
+        }
+        if (value.trim().length < 2) {
+          return 'Name looks too short';
+        }
+        return null;
+      },
+      textFieldLabel: 'Full name',
+      hintText: 'Enter your full name',
+      prefix: const Icon(LucideIcons.user, size: 20),
+      controller: fullNameController,
+      textCapitalization: TextCapitalization.words,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  Widget _buildEmailField() {
+    return TextFieldWidget(
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your email address';
+        }
+        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
+          return 'Please enter a valid email address';
+        }
+        return null;
+      },
+      errorText: state is AuthErrorState && state.message.contains('email')
+          ? state.message
+          : null,
+      textFieldLabel: 'Email address',
+      hintText: 'Enter your email',
+      prefix: const Icon(LucideIcons.mail, size: 20),
+      controller: emailController,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return ListenableBuilder(
+      listenable: Listenable.merge([obscurePassword, passwordController]),
+      builder: (context, _) => TextFieldWidget(
+        validator: PasswordValidator.validate,
+        errorText: state is AuthErrorState && state.message.contains('password')
+            ? state.message
+            : null,
+        textFieldLabel: 'Password',
+        hintText: 'Create a password',
+        prefix: Icon(
+          obscurePassword.value ? LucideIcons.lock : LucideIcons.lockOpen,
+          size: 20,
+        ),
+        controller: passwordController,
+        obscureText: obscurePassword.value,
+        textInputAction: TextInputAction.next,
+        suffix: GestureDetector(
+          onTap: () => obscurePassword.value = !obscurePassword.value,
+          child: passwordController.text.isNotEmpty
+              ? Icon(
+                  obscurePassword.value ? LucideIcons.eye : LucideIcons.eyeOff,
+                  color: AppColors.darkTextMuted,
+                  size: 20,
+                )
+              : const SizedBox(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfirmPasswordField() {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        obscureConfirmPassword,
+        confirmPasswordController,
+      ]),
+      builder: (context, _) => TextFieldWidget(
+        validator: (value) =>
+            PasswordValidator.validateConfirm(value, passwordController.text),
+        errorText: state is AuthErrorState && state.message.contains('password')
+            ? state.message
+            : null,
+        textFieldLabel: 'Confirm password',
+        hintText: 'Confirm your password',
+        prefix: Icon(
+          obscureConfirmPassword.value
+              ? LucideIcons.lock
+              : LucideIcons.lockOpen,
+          size: 20,
+        ),
+        controller: confirmPasswordController,
+        obscureText: obscureConfirmPassword.value,
+        textInputAction: TextInputAction.done,
+        suffix: GestureDetector(
+          onTap: () =>
+              obscureConfirmPassword.value = !obscureConfirmPassword.value,
+          child: confirmPasswordController.text.isNotEmpty
+              ? Icon(
+                  obscureConfirmPassword.value
+                      ? LucideIcons.eye
+                      : LucideIcons.eyeOff,
+                  color: AppColors.darkTextMuted,
+                  size: 20,
+                )
+              : const SizedBox(),
+        ),
       ),
     );
   }

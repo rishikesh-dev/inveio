@@ -13,5 +13,10 @@ abstract class TransactionDataSource {
 
   Future<TransactionModel?> getTransactionById(String id);
 
+  Future<TransactionModel?> getTransactionByLocalId(int localId);
+
   Future<void> deleteTransaction(int id);
+
+  /// Deletes every expense and invoice record. Only transactions are affected.
+  Future<void> deleteAllTransactions();
 }

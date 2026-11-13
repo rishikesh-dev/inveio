@@ -1,7 +1,7 @@
 part of 'onboarding_bloc.dart';
 
 /// Base state for all onboarding-related states.
-@immutable
+
 sealed class OnboardingState extends Equatable {
   /// The current onboarding entity data.
   final OnboardingEntity onboarding;

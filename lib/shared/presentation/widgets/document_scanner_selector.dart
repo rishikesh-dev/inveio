@@ -2,15 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:inveio/shared/routes/route_data/scan_result_route_data.dart';
 import 'package:inveio/shared/routes/router_constants.dart';
-import 'package:inveio/scan/domain/entities/scan_receipt_entity.dart';
+import 'package:inveio/scan/domain/entities/parsed_receipt.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DocumentScannerSelector extends StatelessWidget {
-  const DocumentScannerSelector({super.key, required this.state, this.imagePath});
-  final ScannedReceiptEntity state;
+  const DocumentScannerSelector({
+    super.key,
+    this.state,
+    this.imagePath,
+    this.onCancel,
+  });
+
+  /// Extracted scan data. `null` when the user chose to enter a document
+  /// manually, in which case the target form opens empty.
+  final ParsedReceipt? state;
 
   /// Local path of the scanned document image, forwarded to the form screens.
   final String? imagePath;
+
+  /// Called when the selector is dismissed without picking a document type.
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -45,14 +56,16 @@ class DocumentScannerSelector extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Document scanned!',
+                    state == null ? 'Enter manually' : 'Document scanned!',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                       fontSize: 16,
                     ),
                   ),
                   Text(
-                    "We've detected text in your document.",
+                    state == null
+                        ? 'Pick the type of document you want to add.'
+                        : "We've detected text in your document.",
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: Theme.of(context).hintColor,
                     ),
@@ -85,9 +98,15 @@ class DocumentScannerSelector extends StatelessWidget {
                 cardTheme: Colors.blue,
                 onTap: () {
                   Navigator.pop(context);
+                  final scanned = state;
                   context.pushNamed(
                     RouterConstants.addExpense,
-                    extra: ScanResultRouteData(data: state, imagePath: imagePath),
+                    extra: scanned == null
+                        ? null
+                        : ScanResultRouteData(
+                            data: scanned,
+                            imagePath: imagePath,
+                          ),
                   );
                 },
               ),
@@ -98,9 +117,15 @@ class DocumentScannerSelector extends StatelessWidget {
                 cardTheme: Colors.green,
                 onTap: () {
                   Navigator.pop(context);
+                  final scanned = state;
                   context.pushNamed(
                     RouterConstants.addInvoice,
-                    extra: ScanResultRouteData(data: state, imagePath: imagePath),
+                    extra: scanned == null
+                        ? null
+                        : ScanResultRouteData(
+                            data: scanned,
+                            imagePath: imagePath,
+                          ),
                   );
                 },
               ),
@@ -123,6 +148,17 @@ class DocumentScannerSelector extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                onCancel?.call();
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
           ),
         ],
       ),

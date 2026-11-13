@@ -13,7 +13,7 @@ class ExpensePrefill extends Equatable {
     this.transactionDate,
   });
 
-  /// Parsed total amount from the scan, when available.
+  /// Parsed printed total from the scan (tax-inclusive), when available.
   final double? amount;
 
   /// Extracted counterparty GSTIN, when available.

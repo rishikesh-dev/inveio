@@ -7,17 +7,18 @@ import 'package:inveio/auth/presentation/screens/sign_up_screen.dart';
 import 'package:inveio/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:inveio/profile/presentation/screens/account/change_password/change_password_screen.dart';
 import 'package:inveio/profile/presentation/screens/account/security_screen.dart';
-import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
+import 'package:inveio/profile/presentation/screens/business/business_details_screen.dart';
 import 'package:inveio/shared/dependencies/app_dependencies.dart';
 import 'package:inveio/shared/routes/route_data/delete_account_route_data.dart';
 import 'package:inveio/shared/routes/route_data/edit_profile_route_data.dart';
 import 'package:inveio/shared/routes/route_data/scan_result_route_data.dart';
+import 'package:inveio/shared/routes/route_guard.dart';
 import 'package:inveio/shared/routes/router_constants.dart';
 import 'package:inveio/expenses/presentation/cubit/expense_form_cubit.dart';
-import 'package:inveio/expenses/presentation/screens/add_expense_screen.dart';
-import 'package:inveio/expenses/presentation/screens/transaction_details_screen.dart';
+import 'package:inveio/expenses/presentation/screens/expense_form_screen.dart';
+import 'package:inveio/transaction/presentation/screens/transaction_details_screen.dart';
 import 'package:inveio/invoice/presentation/cubit/invoice_form_cubit.dart';
-import 'package:inveio/invoice/presentation/screens/add_invoice_screen.dart';
+import 'package:inveio/invoice/presentation/screens/invoice_form_screen.dart';
 import 'package:inveio/home/presentation/screens/home_screen.dart';
 import 'package:inveio/invoice/presentation/screens/invoice_screen.dart';
 import 'package:inveio/shared/presentation/screens/main_screen.dart';
@@ -29,7 +30,6 @@ import 'package:inveio/profile/presentation/screens/account/delete_account_confi
 import 'package:inveio/profile/presentation/screens/account/edit_profile_screen.dart';
 import 'package:inveio/profile/presentation/screens/profile_screen.dart';
 import 'package:inveio/reports/presentation/screens/reports_screen.dart';
-import 'package:inveio/scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:inveio/splash/presentation/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,18 +53,6 @@ class AppRouterConfig {
       debugPrint(
         'REDIRECT: auth=$authState onboarding=$onboardingState loc=$location',
       );
-      final protectedRoutes = {
-        RouterConstants.mainScreen,
-        RouterConstants.addExpense,
-        RouterConstants.addInvoice,
-        RouterConstants.editInvoice,
-        RouterConstants.profile,
-        RouterConstants.editProfile,
-        RouterConstants.deleteAccountConfirmation,
-        RouterConstants.settings,
-        RouterConstants.securityScreen,
-        RouterConstants.changePasswordScreen,
-      };
 
       final isOnboardingPage = location.startsWith(RouterConstants.onBoarding);
       // don't redirect while auth is still resolving
@@ -75,7 +63,7 @@ class AppRouterConfig {
 
       if (authState is! AuthSignedIn) {
         if (location == RouterConstants.splash) return RouterConstants.signIn;
-        if (protectedRoutes.contains(location)) {
+        if (isProtectedLocation(location)) {
           return RouterConstants.signIn;
         }
 
@@ -158,11 +146,6 @@ class AppRouterConfig {
         builder: (context, state) => const InvoiceScreen(),
       ),
       GoRoute(
-        path: RouterConstants.scanReceipt,
-        name: RouterConstants.scanReceipt,
-        builder: (context, state) => const ScanReceiptScreen(),
-      ),
-      GoRoute(
         path: RouterConstants.reports,
         name: RouterConstants.reports,
         builder: (context, state) => const ReportsScreen(),
@@ -189,6 +172,13 @@ class AppRouterConfig {
         name: RouterConstants.securityScreen,
         builder: (context, state) {
           return const SecurityScreen();
+        },
+      ),
+      GoRoute(
+        path: RouterConstants.businessDetails,
+        name: RouterConstants.businessDetails,
+        builder: (context, state) {
+          return const BusinessDetailsScreen();
         },
       ),
       GoRoute(
@@ -230,11 +220,24 @@ class AppRouterConfig {
           return BlocProvider<ExpenseFormCubit>(
             create: (_) => AppDependencies.sl<ExpenseFormCubit>(),
             child: extra is ScanResultRouteData
-                ? AddExpenseScreen(
+                ? ExpenseFormScreen(
                     scannedData: extra.data,
                     scannedImagePath: extra.imagePath,
+                    expenseId: state.pathParameters['id'],
                   )
-                : const AddExpenseScreen(),
+                : const ExpenseFormScreen(),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: RouterConstants.editExpense,
+        name: RouterConstants.editExpense,
+        builder: (context, state) {
+          final id = state.pathParameters['id'];
+          return BlocProvider<ExpenseFormCubit>(
+            create: (_) => AppDependencies.sl<ExpenseFormCubit>(),
+            child: ExpenseFormScreen(expenseId: id),
           );
         },
       ),
@@ -247,8 +250,11 @@ class AppRouterConfig {
           return BlocProvider<InvoiceFormCubit>(
             create: (_) => AppDependencies.sl<InvoiceFormCubit>(),
             child: extra is ScanResultRouteData
-                ? AddInvoiceScreen(scannedData: extra.data)
-                : const AddInvoiceScreen(),
+                ? InvoiceFormScreen(
+                    scannedData: extra.data,
+                    scannedImagePath: extra.imagePath,
+                  )
+                : const InvoiceFormScreen(),
           );
         },
       ),
@@ -256,10 +262,10 @@ class AppRouterConfig {
         path: RouterConstants.editInvoice,
         name: RouterConstants.editInvoice,
         builder: (context, state) {
-          final entity = state.extra as TransactionEntity?;
+          final id = state.pathParameters['id'];
           return BlocProvider<InvoiceFormCubit>(
             create: (_) => AppDependencies.sl<InvoiceFormCubit>(),
-            child: AddInvoiceScreen(initialTransaction: entity),
+            child: InvoiceFormScreen(invoiceId: id),
           );
         },
       ),
@@ -267,7 +273,7 @@ class AppRouterConfig {
         path: RouterConstants.transactionDetails,
         name: RouterConstants.transactionDetails,
         builder: (context, state) {
-          return TransactionDetailsScreen(expenseId: state.extra.toString());
+          return TransactionDetailsScreen(localId: state.extra as int?);
         },
       ),
     ],

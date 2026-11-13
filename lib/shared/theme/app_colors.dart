@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Central palette of all colors used in the app, organized by usage.
 class AppColors {
-  /// Primary brand color – CTA lime green.
-  static const primary = Color(0xFFAAFF4D);
+  /// Primary brand color – electric lime for CTAs.
+  static const primary = Color(0xFFB5FF45);
 
   /// Accent brand color – income green.
   static const primaryAccent = Color(0xFF00D97E);
@@ -15,7 +15,7 @@ class AppColors {
   static const primaryDark = Color(0xFF0D1F1A);
 
   /// Primary brand color with reduced opacity.
-  static const primaryAlpha = Color(0x26AAFF4D);
+  static const primaryAlpha = Color(0x26B5FF45);
 
   /// Semantic color for income indicators.
   static const income = Color(0xFF00D97E);

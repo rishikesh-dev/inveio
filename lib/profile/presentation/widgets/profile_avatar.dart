@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ProfileAvatar extends StatelessWidget {
-  const ProfileAvatar({
-    super.key,
-    this.image,
-    this.onTap,
-  });
+  const ProfileAvatar({super.key, this.image, this.onTap});
 
   final ImageProvider? image;
   final VoidCallback? onTap;
@@ -23,12 +19,7 @@ class ProfileAvatar extends StatelessWidget {
               radius: 56,
               backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
               backgroundImage: image,
-              child: image == null
-                  ? const Icon(
-                      Icons.person,
-                      size: 56,
-                    )
-                  : null,
+              child: image == null ? const Icon(Icons.person, size: 56) : null,
             ),
 
             Positioned(
@@ -60,22 +51,17 @@ class ProfileAvatar extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        Text(
-          'Profile Photo',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('Profile Photo', style: Theme.of(context).textTheme.titleMedium),
 
         const SizedBox(height: 6),
 
         Text(
           'Tap to change your profile photo',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.color
-                    ?.withValues(alpha: .7),
-              ),
+            color: Theme.of(
+              context,
+            ).textTheme.bodySmall?.color?.withValues(alpha: .7),
+          ),
         ),
       ],
     );

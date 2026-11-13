@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
 import 'package:inveio/shared/presentation/widgets/app_bar_widget.dart';
 import 'package:inveio/shared/presentation/widgets/neon_button.dart';
+import 'package:inveio/shared/presentation/widgets/password_checklist.dart';
 import 'package:inveio/shared/presentation/widgets/text_field_widget.dart';
 import 'package:inveio/shared/utils/extensions/extensions.dart';
+import 'package:inveio/shared/utils/password_validator.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -24,18 +26,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
-
-  bool get _has8Characters => _newPasswordController.text.length >= 8;
-  bool get _hasNumber => RegExp(r'\d').hasMatch(_newPasswordController.text);
-  bool get _hasUppercase =>
-      RegExp(r'[A-Z]').hasMatch(_newPasswordController.text);
-  bool get _hasSpecial =>
-      RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(_newPasswordController.text);
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -178,86 +168,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 ),
                               ),
                               hintText: 'Enter your new password',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Enter a new password';
-                                }
-                                if (!_has8Characters) {
-                                  return 'Password must be at least 8 characters';
-                                }
-                                if (!_hasNumber) {
-                                  return 'Password must include a number';
-                                }
-                                if (!_hasUppercase) {
-                                  return 'Password must include an uppercase letter';
-                                }
-                                if (!_hasSpecial) {
-                                  return 'Password must include a special character';
-                                }
-                                return null;
-                              },
+                              validator: (value) => PasswordValidator.validate(
+                                value,
+                                emptyMessage: 'Enter a new password',
+                              ),
                             ),
 
                             const SizedBox(height: 12),
 
-                            ValueListenableBuilder(
-                              valueListenable: _newPasswordController,
-                              builder: (context, value, child) {
-                                return Column(
-                                  children:
-                                      [
-                                            (
-                                              'At least 8 characters',
-                                              _has8Characters,
-                                            ),
-                                            ('Includes a number', _hasNumber),
-                                            (
-                                              'Includes an uppercase letter',
-                                              _hasUppercase,
-                                            ),
-                                            (
-                                              'Includes a special character (e.g. !@#\$%)',
-                                              _hasSpecial,
-                                            ),
-                                          ]
-                                          .map(
-                                            (item) => Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 8,
-                                              ),
-                                              child: Row(  
-                                                children: [
-                                                  Icon(
-                                                    item.$2
-                                                        ? LucideIcons
-                                                              .circleCheck
-                                                        : LucideIcons.circleX,
-                                                    size: 10,
-                                                    color: item.$2
-                                                        ? const Color(
-                                                            0xFFB5FF45,
-                                                          )
-                                                        : Colors.red,
-                                                  ),
-                                                  const SizedBox(width: 10),
-                                                  Text(
-                                                    item.$1,
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      color: item.$2
-                                                          ? const Color(
-                                                              0xFFB5FF45,
-                                                            )
-                                                          : theme.hintColor,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                );
-                              },
+                            PasswordChecklist(
+                              controller: _newPasswordController,
                             ),
 
                             const SizedBox(height: 12),
@@ -280,9 +200,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               ),
                               hintText: 'Re-enter your new password',
                               validator: (value) =>
-                                  value != _newPasswordController.text
-                                  ? 'Passwords do not match'
-                                  : null,
+                                  PasswordValidator.validateConfirm(
+                                    value,
+                                    _newPasswordController.text,
+                                    emptyMessage: 'Re-enter your new password',
+                                  ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            PasswordChecklist(
+                              controller: _confirmPasswordController,
                             ),
 
                             const SizedBox(height: 20),

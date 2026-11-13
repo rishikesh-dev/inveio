@@ -1,7 +1,7 @@
 part of 'transaction_bloc.dart';
 
 /// Base class for events handled by [TransactionBloc].
-@immutable
+
 sealed class TransactionEvent extends Equatable {
   const TransactionEvent();
 
@@ -25,15 +25,20 @@ final class AllTransactionsRequested extends TransactionEvent {
   const AllTransactionsRequested();
 }
 
-/// Requests details for a single transaction by its id.
-final class TransactionDetailsRequested extends TransactionEvent {
-  /// The server id or local id (as a string) of the transaction.
-  final String expenseId;
+/// Requests every invoice.
+final class AllInvoicesRequested extends TransactionEvent {
+  const AllInvoicesRequested();
+}
 
-  const TransactionDetailsRequested(this.expenseId);
+/// Requests details for a single transaction by its local Isar id.
+final class TransactionDetailsRequested extends TransactionEvent {
+  /// The local Isar id of the transaction.
+  final int localId;
+
+  const TransactionDetailsRequested(this.localId);
 
   @override
-  List<Object?> get props => [expenseId];
+  List<Object?> get props => [localId];
 }
 
 /// Deletes a transaction by its local Isar id.
@@ -45,4 +50,15 @@ final class DeleteTransaction extends TransactionEvent {
 
   @override
   List<Object?> get props => [localId];
+}
+
+/// Clears all expense and invoice history.
+final class ClearHistory extends TransactionEvent {
+  /// Text the user typed to confirm the destructive action.
+  final String confirmation;
+
+  const ClearHistory({this.confirmation = ''});
+
+  @override
+  List<Object?> get props => [confirmation];
 }

@@ -6,6 +6,8 @@ const _sentinel = Object();
 
 class OnboardingEntity {
   final String? businessName;
+  final String? address;
+  final String? logoPath;
   final String? gstin;
   final WorkType? workType;
   final String? stateCode;
@@ -13,7 +15,9 @@ class OnboardingEntity {
   final bool onboardingComplete;
 
   const OnboardingEntity({
-     this.businessName,
+    this.businessName,
+    this.address,
+    this.logoPath,
     this.gstin,
     this.workType,
     this.stateCode,
@@ -23,6 +27,8 @@ class OnboardingEntity {
 
   const OnboardingEntity.empty()
     : businessName = '',
+      address = null,
+      logoPath = null,
       gstin = null,
       workType = null,
       stateCode = null,
@@ -31,6 +37,8 @@ class OnboardingEntity {
 
   OnboardingEntity copyWith({
     String? businessName,
+    Object? address = _sentinel,
+    Object? logoPath = _sentinel,
     Object? gstin = _sentinel,
     WorkType? workType,
     Object? stateCode = _sentinel,
@@ -39,6 +47,12 @@ class OnboardingEntity {
   }) {
     return OnboardingEntity(
       businessName: businessName ?? this.businessName,
+      address: identical(address, _sentinel)
+          ? this.address
+          : address as String?,
+      logoPath: identical(logoPath, _sentinel)
+          ? this.logoPath
+          : logoPath as String?,
       gstin: identical(gstin, _sentinel) ? this.gstin : gstin as String?,
       workType: workType ?? this.workType,
       stateCode: identical(stateCode, _sentinel)

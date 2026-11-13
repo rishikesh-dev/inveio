@@ -96,8 +96,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
                           ),
-                        )
-                            .toAnimatedEntrance(delay: const Duration(milliseconds: 60)),
+                        ).toAnimatedEntrance(
+                          delay: const Duration(milliseconds: 60),
+                        ),
                         const SizedBox(height: 8),
                         const Text(
                           'Enter your email and we will send a reset link.',
@@ -106,8 +107,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
-                        )
-                            .toAnimatedEntrance(delay: const Duration(milliseconds: 110)),
+                        ).toAnimatedEntrance(
+                          delay: const Duration(milliseconds: 110),
+                        ),
                         const SizedBox(height: 30),
                         TextFieldWidget(
                           prefix: const Icon(LucideIcons.mail, size: 20),
@@ -124,8 +126,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           },
                           controller: _emailTextController,
                           hintText: 'Enter your email ',
-                        )
-                            .toAnimatedEntrance(delay: const Duration(milliseconds: 150)),
+                        ).toAnimatedEntrance(
+                          delay: const Duration(milliseconds: 150),
+                        ),
                         const SizedBox(height: 20),
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, state) {
@@ -136,8 +139,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               onPressed: state is AuthLoading
                                   ? null
                                   : () {
-                                      if (!_formKey.currentState!
-                                          .validate()) {
+                                      if (!_formKey.currentState!.validate()) {
                                         return;
                                       }
                                       context.read<AuthBloc>().add(
@@ -147,8 +149,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         ),
                                       );
                                     },
-                            )
-                                .toAnimatedEntrance(delay: const Duration(milliseconds: 240));
+                            ).toAnimatedEntrance(
+                              delay: const Duration(milliseconds: 240),
+                            );
                           },
                         ),
                       ],

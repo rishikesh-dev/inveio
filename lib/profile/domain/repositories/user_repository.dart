@@ -11,7 +11,5 @@ abstract class UserRepository {
   Future<Either<Failure, UserEntity>> updateProfile({required UserEntity user});
 
   /// Returns a stream that emits the user profile for the given [uid] on changes.
-  Stream<Either<Failure, UserEntity?>> watchProfile({
-    required String uid,
-  });
+  Stream<Either<Failure, UserEntity?>> watchProfile({required String uid});
 }

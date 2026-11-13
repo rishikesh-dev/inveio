@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:inveio/shared/theme/app_colors.dart';
+import 'package:inveio/shared/theme/app_text_styles.dart';
 
 class TextFieldWidget extends StatelessWidget {
   const TextFieldWidget({
@@ -89,21 +91,29 @@ class TextFieldWidget extends StatelessWidget {
           if (textFieldLabel != null) ...[
             const SizedBox(height: 6),
             Text(
-              ' ${textFieldLabel!}',
-              style: labelStyle ?? Theme.of(context).textTheme.labelLarge,
+              textFieldLabel!,
+              style:
+                  labelStyle ??
+                  AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.darkTextSecondary,
+                  ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
           ],
           TextFormField(
             enabled: enabled,
             readOnly: readOnly ?? false,
             validator: validator,
             keyboardType: keyboardType,
-            style: textStyle,
+            style:
+                textStyle ??
+                AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.darkTextPrimary,
+                ),
             controller: controller,
             onChanged: onChanged,
             obscureText: obscureText ?? false,
-            cursorColor: cursorColor,
+            cursorColor: cursorColor ?? AppColors.primary,
             maxLength: maxLength,
             focusNode: focusNode,
             textCapitalization: textCapitalization ?? TextCapitalization.none,
@@ -120,15 +130,34 @@ class TextFieldWidget extends StatelessWidget {
                   helperText: showHelperSpace == true ? '' : null,
                   counterText: counterText,
                   contentPadding: EdgeInsets.symmetric(
-                    vertical: contentPaddingVertical ?? 15,
-                    horizontal: contentPaddingHorizontal ?? 15,
+                    vertical: contentPaddingVertical ?? 16,
+                    horizontal: contentPaddingHorizontal ?? 16,
                   ),
-                  prefixIcon: prefix,
+                  prefixIcon: prefix != null
+                      ? Padding(
+                          padding: const EdgeInsets.only(left: 16, right: 12),
+                          child: IconTheme(
+                            data: const IconThemeData(
+                              color: AppColors.darkTextMuted,
+                              size: 20,
+                            ),
+                            child: prefix!,
+                          ),
+                        )
+                      : null,
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
                   suffixIcon: suffix,
                   hintText: hintText,
-                  hintStyle: hintFontSize != null
-                      ? TextStyle(fontSize: hintFontSize)
-                      : null,
+                  hintStyle:
+                      (hintFontSize != null
+                              ? AppTextStyles.bodyMedium.copyWith(
+                                  fontSize: hintFontSize,
+                                )
+                              : AppTextStyles.bodyMedium)
+                          .copyWith(color: AppColors.darkTextMuted),
                   border: border,
                   enabledBorder: border,
                   focusedBorder: border,

@@ -14,7 +14,7 @@ Track expenses, scan receipts, generate GST-compliant invoices, and visualize sp
 - **Invoice Generation** — Create invoices with client details, line items, notes, and GST breakdown
 - **Receipt Scanning** — Camera-based receipt capture (OCR placeholder)
 - **Reports & Analytics** — Custom line charts, category donut charts, cash flow summaries
-- **User Profile** — Edit profile, settings (AI confidence, notifications, currency, data export)
+- **User Profile** — Edit profile, settings (theme, currency, data export)
 
 ### GST Compliance (India)
 - Automatic CGST/SGST/IGST calculation based on GSTIN state code
@@ -141,10 +141,9 @@ lib/
 │       ├── screens/                   # AddTransaction, AddExpense, AddInvoice, TransactionDetails
 │       └── widgets/                   # GstSplitBar, LineItemForm
 │
-├── scan/                              # Receipt scanning (placeholder)
+├── scan/                              # Receipt scanning
 │   └── presentation/
-│       ├── screens/
-│       │   └── scan_receipt_screen.dart
+│       ├── cubit/
 │       └── widgets/
 │
 ├── invoice/                           # Invoice management
@@ -186,7 +185,7 @@ lib/
     ├── presentation/widgets/          # AppBar, BottomNav, AppCard, NeonButton, AccentChip, TextField, etc.
     ├── routes/                        # AppRouterConfig (go_router), RouterConstants
     ├── theme/                         # AppColors, AppTheme (light/dark), AppTextStyles
-    └── utils/                         # CurrencyFormatter, Greeting, OpenLink, Spacing, AnimatedEntrance
+    └── utils/                         # CurrencyFormatter, Greeting, AnimatedEntrance
 ```
 
 ### Architecture: Clean Architecture (Feature-First)
@@ -301,7 +300,6 @@ Each feature follows a strict 3-layer separation:
 | `forgotPassword` | `/forgot-password` | ForgotPasswordScreen |
 | `addTransaction` | `/add-transaction` | AddTransactionScreen |
 | `transactionDetails` | `/transaction-details` | TransactionDetailsScreen |
-| `scanReceipt` | `/scan-receipt` | ScanReceiptScreen |
 | `invoice` | `/invoice` | InvoiceScreen |
 | `reports` | `/reports` | ReportsScreen |
 
@@ -318,7 +316,7 @@ Each feature follows a strict 3-layer separation:
 |---|---|---|
 | `AuthBloc` | Sign-in, sign-up, Google sign-in, forgot password, sign out, delete account | `AuthInitial`, `AuthLoading`, `AuthSignedIn`, `AuthError` |
 | `OnboardingBloc` | Save business name, save GSTIN, save work type | `OnboardingInitial`, `OnboardingLoading`, `OnboardingSuccess`, `OnboardingError` |
-| `TransactionBloc` | Add expense, add invoice, fetch transactions, filter, search | `TransactionInitial`, `TransactionLoading`, `TransactionLoaded`, `TransactionError` |
+| `TransactionBloc` | Add expense, add invoice, fetch transactions | `TransactionInitial`, `TransactionLoading`, `TransactionLoaded`, `TransactionError` |
 | `UserBloc` | Fetch profile, update profile, update settings | `UserInitial`, `UserLoading`, `UserLoaded`, `UserError` |
 
 Error handling uses `fpdart`'s `Either<Failure, Success>` in the repository layer, mapped to bloc error states.

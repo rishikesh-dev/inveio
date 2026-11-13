@@ -3,8 +3,10 @@ import 'package:inveio/auth/presentation/widgets/sign_up_form_body.dart';
 import 'package:inveio/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:inveio/shared/presentation/widgets/app_bar_widget.dart';
 import 'package:inveio/shared/routes/app_router_config.dart';
+import 'package:inveio/shared/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Screen for creating a new user account.
 class SignUpScreen extends StatefulWidget {
@@ -24,6 +26,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _obscurePassword = ValueNotifier<bool>(true);
   final _obscureConfirmPassword = ValueNotifier<bool>(true);
+
   @override
   void initState() {
     super.initState();
@@ -48,10 +51,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            const AppBarWidget(),
+            AppBarWidget(
+              leading: IconButton(
+                icon: const Icon(LucideIcons.arrowLeft, size: 22),
+                onPressed: () => Navigator.of(context).maybePop(),
+                color: AppColors.darkTextPrimary,
+              ),
+            ),
             SliverToBoxAdapter(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is AuthSignedIn) {

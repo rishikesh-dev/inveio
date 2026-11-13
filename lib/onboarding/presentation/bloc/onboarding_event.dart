@@ -1,7 +1,5 @@
 part of 'onboarding_bloc.dart';
 
-/// Base event for all onboarding-related events.
-@immutable
 sealed class OnboardingEvent extends Equatable {
   /// Creates an [OnboardingEvent].
   const OnboardingEvent();
@@ -42,6 +40,32 @@ final class GstinChanged extends OnboardingEvent {
   @override
   /// The list of props used for equality comparison.
   List<Object?> get props => [gstin];
+}
+
+/// Event dispatched when the business address changes.
+final class BusinessAddressChanged extends OnboardingEvent {
+  /// The new address value.
+  final String address;
+
+  /// Creates a [BusinessAddressChanged] with the given [address].
+  const BusinessAddressChanged(this.address);
+
+  @override
+  /// The list of props used for equality comparison.
+  List<Object?> get props => [address];
+}
+
+/// Event dispatched when the business logo path changes.
+final class BusinessLogoChanged extends OnboardingEvent {
+  /// The new logo path, or `null` when the logo is removed.
+  final String? logoPath;
+
+  /// Creates a [BusinessLogoChanged] with the given [logoPath].
+  const BusinessLogoChanged(this.logoPath);
+
+  @override
+  /// The list of props used for equality comparison.
+  List<Object?> get props => [logoPath];
 }
 
 /// Event dispatched when a work type is selected.

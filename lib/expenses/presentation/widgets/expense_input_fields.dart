@@ -25,10 +25,16 @@ class ExpenseFieldLabel extends StatelessWidget {
 
 /// Displays the selected date and opens a date picker on tap.
 class ExpenseDateField extends StatelessWidget {
-  const ExpenseDateField({super.key, required this.date, this.time, required this.onTap, required this.timePicker});
+  const ExpenseDateField({
+    super.key,
+    required this.date,
+    this.time,
+    required this.onTap,
+    required this.timePicker,
+  });
 
   /// The currently selected date.
-  final DateTime date;
+  final DateTime? date;
 
   /// The currently selected time.
   final TimeOfDay? time;
@@ -63,9 +69,13 @@ class ExpenseDateField extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    DateFormat('MMM dd, yyyy').format(date),
-                    style: const TextStyle(
-                      color: AppColors.darkTextPrimary,
+                    date != null
+                        ? DateFormat('MMM dd, yyyy').format(date!)
+                        : 'Select date',
+                    style: TextStyle(
+                      color: date != null
+                          ? AppColors.darkTextPrimary
+                          : AppColors.darkTextMuted,
                       fontSize: 15,
                     ),
                   ),
@@ -96,7 +106,9 @@ class ExpenseDateField extends StatelessWidget {
                   Text(
                     time != null
                         ? time!.format(context)
-                        : DateFormat('hh:mm a').format(date),
+                        : date != null
+                        ? DateFormat('hh:mm a').format(date!)
+                        : '--:--',
                     style: const TextStyle(
                       color: AppColors.darkTextPrimary,
                       fontSize: 15,

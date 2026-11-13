@@ -16,14 +16,17 @@ class DashboardSpendSummaryCard extends StatelessWidget {
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
         final expenses = state.latest.latestExpenses;
-        final totalSpend =
-            expenses.fold<double>(0, (sum, e) => sum + e.totalAmount);
-        final totalTax =
-            expenses.fold<double>(0, (sum, e) => sum + e.cgst + e.sgst + e.igst);
+        final totalSpend = expenses.fold<double>(
+          0,
+          (sum, e) => sum + e.totalAmount,
+        );
+        final totalTax = expenses.fold<double>(
+          0,
+          (sum, e) => sum + e.cgst + e.sgst + e.igst,
+        );
 
         final daysInMonth = DateTime.now().day;
-        final dailyAvg =
-            daysInMonth > 0 ? totalSpend / daysInMonth : 0.0;
+        final dailyAvg = daysInMonth > 0 ? totalSpend / daysInMonth : 0.0;
 
         return AppCard(
           padding: const EdgeInsets.all(20),

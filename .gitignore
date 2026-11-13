@@ -96,4 +96,36 @@ AUDIT.md
 Thumbs.db
 
 .kilo/
+
+# AI coding agent files
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.codex/
+.continue/
+.aider*
+AGENTS.md
+CLAUDE.md
+.github/copilot-instructions.md
+.mcp.json
+
+# API keys / credentials — never commit
+lib/shared/secrets/
+android/app/google-services.json
+**/google-services.json
+**/GoogleService-Info.plist
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+key.properties
+serviceAccountKey.json
+.env
+.env.*
+!.env.example
+
+# Planning / audit docs
+assets/plan/
 AUDIT.md

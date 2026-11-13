@@ -16,10 +16,7 @@ class ReceiptCards extends StatelessWidget {
         Positioned(
           top: 92 + floatOffset * 0.7,
           right: 28,
-          child: Transform.rotate(
-            angle: 0.07,
-            child: _card('GST 18% · ₹468'),
-          ),
+          child: Transform.rotate(angle: 0.07, child: _card('GST 18% · ₹468')),
         ),
         Positioned(
           bottom: 185 - floatOffset * 0.9,

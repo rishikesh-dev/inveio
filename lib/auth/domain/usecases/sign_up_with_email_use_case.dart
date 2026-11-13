@@ -11,6 +11,7 @@ class SignUpWithEmailUseCase {
 
   /// Creates a [SignUpWithEmailUseCase] with the given [AuthRepository].
   SignUpWithEmailUseCase({required this.userRepository});
+
   /// Executes the sign-up use case with the provided [params].
   Future<Either<Failure, UserEntity>> call({
     required UserDetailsParams params,

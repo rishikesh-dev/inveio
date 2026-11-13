@@ -42,9 +42,21 @@ class IsarTransactionDataSourceImpl implements TransactionDataSource {
   }
 
   @override
+  Future<TransactionModel?> getTransactionByLocalId(int localId) async {
+    return _isar.transactionModels.get(localId);
+  }
+
+  @override
   Future<void> deleteTransaction(int id) async {
     await _isar.writeTxn(() async {
       await _isar.transactionModels.delete(id);
+    });
+  }
+
+  @override
+  Future<void> deleteAllTransactions() async {
+    await _isar.writeTxn(() async {
+      await _isar.transactionModels.clear();
     });
   }
 }

@@ -9,7 +9,7 @@ class SaveOnboardingUseCase {
 
   /// Creates a [SaveOnboardingUseCase] with the given [repository].
   SaveOnboardingUseCase({required OnboardingRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   /// Executes the use case with the given onboarding [data].
   Future<Either<Failure, void>> call(OnboardingEntity data) async {

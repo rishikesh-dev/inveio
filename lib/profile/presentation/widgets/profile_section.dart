@@ -8,11 +8,13 @@ class ProfileSection extends StatelessWidget {
     required this.nameController,
     required this.emailController,
     required this.gstController,
+    this.nameValidator,
   });
 
   final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController gstController;
+  final String? Function(String?)? nameValidator;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class ProfileSection extends StatelessWidget {
             textFieldLabel: 'Name',
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
+            validator: nameValidator,
           ),
 
           const SizedBox(height: 10),

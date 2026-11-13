@@ -13,7 +13,12 @@ class GstPill extends StatelessWidget {
   /// Whether this pill uses the accent (lime) colour scheme.
   final bool accent;
 
-  const GstPill(this.label, {super.key, this.active = false, this.accent = false});
+  const GstPill(
+    this.label, {
+    super.key,
+    this.active = false,
+    this.accent = false,
+  });
 
   @override
   Widget build(BuildContext context) {

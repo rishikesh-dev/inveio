@@ -1,7 +1,6 @@
 import 'package:inveio/transaction/domain/entities/transaction_entity.dart';
 import 'package:inveio/transaction/domain/repositories/transaction_repository.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'transaction_event.dart';
@@ -25,7 +24,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
        super(TransactionState.initial()) {
     on<LatestTransactionsRequested>(_onLatestTransactionsRequested);
     on<AllTransactionsRequested>(_onAllTransactionsRequested);
+    on<AllInvoicesRequested>(_onAllInvoicesRequested);
     on<DeleteTransaction>(_onDeleteTransaction);
+    on<ClearHistory>(_onClearHistory);
     on<TransactionDetailsRequested>(_onTransactionDetailsRequested);
   }
 
@@ -95,6 +96,43 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     );
   }
 
+  Future<void> _onAllInvoicesRequested(
+    AllInvoicesRequested event,
+    Emitter<TransactionState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        invoices: state.invoices.copyWith(
+          isLoadingInvoices: true,
+          invoicesError: null,
+        ),
+      ),
+    );
+
+    final result = await _transactionRepository.getAllTransactions(
+      type: TransactionType.invoice,
+    );
+
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          invoices: state.invoices.copyWith(
+            isLoadingInvoices: false,
+            invoicesError: failure.message,
+          ),
+        ),
+      ),
+      (invoices) => emit(
+        state.copyWith(
+          invoices: state.invoices.copyWith(
+            isLoadingInvoices: false,
+            invoices: invoices,
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _onDeleteTransaction(
     DeleteTransaction event,
     Emitter<TransactionState> emit,
@@ -110,6 +148,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       ),
       (_) {
         add(const LatestTransactionsRequested());
+        add(const AllInvoicesRequested());
       },
     );
   }
@@ -120,12 +159,29 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) {
     final transaction = state.latest.latestExpenses
         .cast<TransactionEntity?>()
-        .firstWhere(
-          (t) =>
-              t?.id == event.expenseId ||
-              t?.localId.toString() == event.expenseId,
-          orElse: () => null,
-        );
+        .firstWhere((t) => t?.localId == event.localId, orElse: () => null);
     emit(state.copyWith(selectedTransaction: transaction));
+  }
+
+  Future<void> _onClearHistory(
+    ClearHistory event,
+    Emitter<TransactionState> emit,
+  ) async {
+    // Enforce the typed confirmation in the bloc too, so a caller that skips
+    // the dialog cannot clear history.
+    if (event.confirmation != 'DELETE') return;
+
+    final result = await _transactionRepository.clearHistory();
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          latest: state.latest.copyWith(latestError: failure.message),
+        ),
+      ),
+      (_) {
+        add(const AllTransactionsRequested());
+        add(const AllInvoicesRequested());
+      },
+    );
   }
 }

@@ -1,5 +1,5 @@
-import 'package:inveio/profile/presentation/widgets/banner/upgrade_banner.dart';
-import 'package:inveio/shared/constants/app_constants.dart';
+import 'dart:async';
+
 import 'package:inveio/profile/domain/entities/user_entity.dart';
 import 'package:inveio/auth/presentation/bloc/auth_bloc.dart';
 import 'package:inveio/shared/presentation/widgets/app_bar_widget.dart';
@@ -14,10 +14,18 @@ import 'package:inveio/profile/presentation/widgets/profile_header.dart';
 import 'package:inveio/profile/presentation/widgets/section_label.dart';
 import 'package:inveio/profile/presentation/widgets/settings_group.dart';
 import 'package:inveio/profile/presentation/widgets/settings_tile.dart';
+import 'package:inveio/profile/presentation/dialogs/clear_history_dialog.dart';
+import 'package:inveio/profile/presentation/buttons/logout_button_widget.dart';
+import 'package:inveio/settings/domain/entities/app_settings.dart';
+import 'package:inveio/settings/presentation/cubit/export_data_cubit.dart';
+import 'package:inveio/settings/presentation/cubit/theme_cubit.dart';
+import 'package:inveio/settings/presentation/widgets/appearance_bottom_sheet.dart';
+import 'package:inveio/transaction/presentation/bloc/transaction_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// The main settings/profile screen displaying user details, preferences, and app controls.
 class ProfileScreen extends StatefulWidget {
@@ -69,131 +77,139 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildContent(BuildContext context, AuthState state, UserEntity user) {
     final onboarding = context.watch<OnboardingBloc>().state.onboarding;
-    return CustomScrollView(
-      slivers: [
-        const AppBarWidget(
-          title: 'Settings',
-          subTitle: 'Manage your account and preferences',
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(15, 22, 15, 110),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ProfileHeader(user: user),
-                const SizedBox(height: 20),
-                const UpgradeBanner(),
-                const SizedBox(height: 20),
-                const SectionLabel('Account'),
-                SettingsGroup(
-                  children: [
-                    SettingsTile(
-                      icon: LucideIcons.atSign,
-                      title: 'Edit Profile',
-                      subtitle: user.email,
-                      onTap: () {
-                        context.pushNamed(
-                          RouterConstants.editProfile,
-                          extra: EditProfileRouteData(
-                            userData: user,
-                            onboardingData: onboarding,
-                          ),
-                        );
-                      },
-                      // onTap: () => showEditProfileSheet(context, user),
-                    ),
-                    SettingsTile(
-                      icon: LucideIcons.lockKeyhole,
-                      title: 'Security',
-                      subtitle: 'Password and app security',
-                      onTap: () {
-                        context.pushNamed(RouterConstants.securityScreen);
-                      },
-                      // onTap: () => showEditProfileSheet(context, user),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const SectionLabel('Business'),
-                SettingsGroup(
-                  children: [
-                    const SettingsTile(
-                      icon: LucideIcons.building2,
-                      title: 'Business Details',
-                      subtitle: 'Business name, address and logo',
-                    ),
-                    SettingsTile(
-                      icon: LucideIcons.stamp,
-                      title: 'GST Registration',
-                      subtitle: onboarding.gstinStatus == GstinStatus.yes
-                          ? 'Registered'
-                          : (onboarding.gstinStatus == GstinStatus.notYet
-                                ? 'Not Registered'
-                                : '—'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const SectionLabel('Preferences'),
-                SettingsGroup(
-                  children: [
-                    SettingsTile(
-                      icon: LucideIcons.bell,
-                      title: 'Appearance',
-                      subtitle: 'Theme and language',
-                      onTap: () =>
-                          _showSnack('Notification settings are coming soon'),
-                    ),
-                    SettingsTile(
-                      icon: LucideIcons.bell,
-                      title: 'Notifications',
-                      subtitle: 'Push, Email, and SMS alerts',
-                      onTap: () =>
-                          _showSnack('Notification settings are coming soon'),
-                    ),
-                    SettingsTile(
-                      icon: LucideIcons.refreshCcw,
-                      title: 'Primary Currency',
-                      subtitle: 'INR - Indian Rupee',
-                      onTap: () =>
-                          _showSnack('Currency settings are coming soon'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const SectionLabel('Data & Security'),
-                SettingsGroup(
-                  children: [
-                    SettingsTile(
-                      icon: LucideIcons.download,
-                      title: 'Export Data',
-                      subtitle: 'Download as CSV or PDF',
-                      onTap: () => _showSnack(
-                        'Export will be available after sync setup',
+    return BlocListener<ExportDataCubit, ExportDataState>(
+      listenWhen: (previous, current) =>
+          current is ExportDataSuccess || current is ExportDataFailure,
+      listener: (context, state) {
+        if (state is ExportDataSuccess) {
+          unawaited(_shareExportedFile(state.filePath));
+        } else if (state is ExportDataFailure) {
+          _showSnack(state.message);
+        }
+      },
+      child: CustomScrollView(
+        slivers: [
+          const AppBarWidget(
+            title: 'Settings',
+            subTitle: 'Manage your account and preferences',
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 22, 15, 110),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ProfileHeader(user: user),
+                  const SizedBox(height: 20),
+                  const SectionLabel('Account'),
+                  SettingsGroup(
+                    children: [
+                      SettingsTile(
+                        icon: LucideIcons.atSign,
+                        title: 'Edit Profile',
+                        subtitle: user.email,
+                        onTap: () {
+                          context.pushNamed(
+                            RouterConstants.editProfile,
+                            extra: EditProfileRouteData(
+                              userData: user,
+                              onboardingData: onboarding,
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    SettingsTile(
-                      icon: LucideIcons.trash2,
-                      title: 'Clear History',
-                      subtitle: 'Permanent deletion of records',
-                      iconColor: AppColors.expense,
-                      onTap: _confirmClearHistory,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 34),
-                _LogoutButton(
-                  isLoading: state is AuthLoading,
-                  uid: user.uid ?? '',
-                ),
-                const SizedBox(height: 34),
-                const FooterMark(),
-              ],
+                      SettingsTile(
+                        icon: LucideIcons.lockKeyhole,
+                        title: 'Security',
+                        subtitle: 'Password and app security',
+                        onTap: () {
+                          context.pushNamed(RouterConstants.securityScreen);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const SectionLabel('Business'),
+                  SettingsGroup(
+                    children: [
+                      SettingsTile(
+                        icon: LucideIcons.building2,
+                        title: 'Business Details',
+                        subtitle: (onboarding.businessName?.isNotEmpty ?? false)
+                            ? onboarding.businessName!
+                            : 'Business name, address and logo',
+                        onTap: () {
+                          context.pushNamed(RouterConstants.businessDetails);
+                        },
+                      ),
+                      SettingsTile(
+                        icon: LucideIcons.stamp,
+                        title: 'GST Registration',
+                        subtitle: onboarding.gstinStatus == GstinStatus.yes
+                            ? 'Registered'
+                            : (onboarding.gstinStatus == GstinStatus.notYet
+                                  ? 'Not Registered'
+                                  : '—'),
+                        onTap: () {
+                          context.pushNamed(RouterConstants.businessDetails);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const SectionLabel('Preferences'),
+                  SettingsGroup(
+                    children: [
+                      BlocSelector<ThemeCubit, AppSettings, AppThemeMode>(
+                        selector: (settings) => settings.themeMode,
+                        builder: (context, themeMode) => SettingsTile(
+                          icon: LucideIcons.palette,
+                          title: 'Appearance',
+                          subtitle: 'Theme: ${themeMode.label}',
+                          onTap: () => AppearanceBottomSheet.show(context),
+                        ),
+                      ),
+                      const SettingsTile(
+                        icon: LucideIcons.refreshCcw,
+                        title: 'Primary Currency',
+                        subtitle: 'INR - Indian Rupee',
+                        trailingWidget: SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const SectionLabel('Data & Security'),
+                  SettingsGroup(
+                    children: [
+                      SettingsTile(
+                        icon: LucideIcons.download,
+                        title: 'Export Data',
+                        subtitle: 'Download expenses and invoices as CSV',
+                        onTap: () =>
+                            context.read<ExportDataCubit>().exportData(),
+                      ),
+                      SettingsTile(
+                        icon: LucideIcons.trash2,
+                        title: 'Clear History',
+                        subtitle: 'Permanent deletion of records',
+                        iconColor: AppColors.expense,
+                        onTap: _confirmClearHistory,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 34),
+                  LogoutButtonWidget(
+                    isLoading: state is AuthLoading,
+                    uid: user.uid ?? '',
+                  ),
+                  const SizedBox(height: 34),
+                  const FooterMark(),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -206,6 +222,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     };
   }
 
+  /// Opens the share sheet for the CSV file written by [ExportDataCubit].
+  Future<void> _shareExportedFile(String path) async {
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(path, mimeType: 'text/csv')]),
+    );
+  }
+
   void _showSnack(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -214,12 +237,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _confirmClearHistory() async {
-    final shouldClear = await showDialog<bool>(
+    final dialog = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Clear history?'),
         content: const Text(
-          'This action cannot be undone once data storage is connected.',
+          'This permanently deletes all your expenses and invoices. Your profile, business details and settings are not affected.',
+          style: TextStyle(fontSize: 18),
         ),
         actions: [
           TextButton(
@@ -228,60 +252,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Clear'),
+            child: const Text('Continue'),
           ),
         ],
       ),
     );
-    if (shouldClear == true) {
-      _showSnack('History cleanup is ready for the data layer');
-    }
-  }
-}
+    if (dialog != true || !mounted) return;
 
-class _LogoutButton extends StatelessWidget {
-  const _LogoutButton({required this.isLoading, required this.uid});
-  final String uid;
-
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: isLoading ? null : () => _confirmLogout(context, uid),
-      icon: const Icon(LucideIcons.logOut),
-      label: Text(
-        isLoading ? 'Please wait...' : 'Logout from ${AppConstants.appName}',
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.darkMutedPanel,
-        foregroundColor: AppColors.darkTextPrimary,
-        minimumSize: const Size.fromHeight(56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-    );
-  }
-
-  Future<void> _confirmLogout(BuildContext context, String uid) async {
-    final shouldLogout = await showDialog<bool>(
+    final confirmation = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Logout?'),
-        content: const Text('You can sign back in anytime.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) => const ClearHistoryDialog(),
     );
-    if (shouldLogout == true && context.mounted) {
-      context.read<AuthBloc>().add(SignOut(uid: uid));
-    }
+    if (confirmation != 'DELETE' || !mounted) return;
+
+    context.read<TransactionBloc>().add(
+      ClearHistory(confirmation: confirmation!),
+    );
+    _showSnack('History cleared');
   }
 }

@@ -28,9 +28,11 @@ class AuthFailureHelper {
     'too-many-requests': 'Too many attempts. Please try again later.',
     'operation-not-allowed': 'This sign-in method is currently unavailable.',
   };
+
   /// Converts a [FirebaseAuthException] into an [AuthFailure] with a user-friendly message.
   static Failure mapFirebaseError(FirebaseAuthException e) {
-    final msg = _firebaseErrors[e.code] ?? 'Authentication failed. Please try again.';
+    final msg =
+        _firebaseErrors[e.code] ?? 'Authentication failed. Please try again.';
     if (!_firebaseErrors.containsKey(e.code)) {
       debugPrint('Unknown Firebase auth error: ${e.code} - ${e.message}');
     }

@@ -41,3 +41,7 @@ class CacheFailure extends Failure {
 class UnknownFailure extends Failure {
   const UnknownFailure(super.message, {super.code});
 }
+
+class AuthCancelledFailure extends Failure {
+  const AuthCancelledFailure() : super('Sign-in cancelled');
+}
